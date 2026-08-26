@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/tokens/scale.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/tokens/typography.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/tokens/base.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/tokens/palette.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/actions/actions.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/forms/forms.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/labels/labels.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/feedback/feedback.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/navigation/navigation.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/overlays/overlays.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/layout/layout.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/components/parts/parts.css">
+<link rel="stylesheet" href="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/tokens/color.css">
+<script src="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js"></script>
+<style>
+@font-face{font-family:'SF Pro Text';src:url('fonts/SF-Pro-Text-Regular.otf') format('opentype');font-weight:400}
+@font-face{font-family:'SF Pro Text';src:url('fonts/SF-Pro-Text-Medium.otf') format('opentype');font-weight:500}
+@font-face{font-family:'SF Pro Text';src:url('fonts/SF-Pro-Text-Semibold.otf') format('opentype');font-weight:600}
+@font-face{font-family:'SF Mono';src:url('fonts/SF-Mono-Regular.otf') format('opentype');font-weight:400}
+@font-face{font-family:'SF Mono';src:url('fonts/SF-Mono-Medium.otf') format('opentype');font-weight:500}
+html,body{margin:0;height:100%;overflow:hidden;background:#0d1209;overscroll-behavior:none}
+a{color:#9cff4d}a:hover{color:#bfff85}
+::selection{background:rgba(100,254,19,0.3)}
+input::placeholder{color:#7b9169}
+@keyframes menu-in{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes tip-in{from{opacity:0}to{opacity:1}}
+@keyframes toast-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes air-in{from{opacity:0}to{opacity:1}}
+</style>
+<script src="air-hands.js"></script>
+</helmet>
+<div style="position:fixed;inset:0;overflow:hidden;background:#0d1209;font-family:'SF Pro Text',-apple-system,'Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent">
+  <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+    <defs>
+      <filter id="gel4" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"></feGaussianBlur>
+        <feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -10"></feColorMatrix>
+      </filter>
+      <filter id="grain4" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence>
+        <feColorMatrix type="saturate" values="0"></feColorMatrix>
+      </filter>
+    </defs>
+  </svg>
+  <video ref="{{ videoRef }}" playsInline="{{ true }}" muted="{{ true }}" autoPlay="{{ true }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transform:scaleX(-1);filter:brightness(0.3);opacity:{{ videoOpacity }}"></video>
+  <canvas ref="{{ bgRef }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none"></canvas>
+  <canvas ref="{{ fieldRef }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none"></canvas>
+  <canvas ref="{{ fxRef }}" onPointerDown="{{ onPointerDown }}" onPointerMove="{{ onPointerMove }}" onPointerUp="{{ onPointerUp }}" onPointerCancel="{{ onPointerUp }}" onPointerLeave="{{ onPointerLeave }}" onContextMenu="{{ onContextMenu }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none"></canvas>
+  <div ref="{{ grainRef }}" style="position:absolute;inset:0;pointer-events:none;opacity:0.07;mix-blend-mode:overlay">
+    <svg width="100%" height="100%" aria-hidden="true"><rect width="100%" height="100%" filter="url(#grain4)"></rect></svg>
+  </div>
+
+  <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:#131a0e;border-bottom:1px solid #2f3d25">
+      <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+        <span style="font-size:14px;font-weight:600;color:#dfeed4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ levelName }}</span>
+        <span style="font-family:'SF Mono',ui-monospace,monospace;font-size:10px;color:#7b9169;white-space:nowrap">{{ subLabel }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex:0 0 auto">
+        <sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ false }}">
+          <input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Пошук" spellCheck="{{ false }}" style="width:120px;height:40px;background:#0d1209;border:1px solid #2f3d25;border-radius:6px;padding:0 10px;color:#dfeed4;font:400 13px 'SF Pro Text',sans-serif;outline:none"></input>
+        </sc-if>
+        <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="invisible" size="large" onClick="{{ toggleSearch }}" hint-size="auto,40px">Пошук</x-import>
+        <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="{{ sheetVariant }}" size="large" onClick="{{ toggleSheet }}" hint-size="auto,40px">Меню</x-import>
+      </div>
+    </div>
+  </sc-if>
+  <div style="position:absolute;top:0;left:0;right:0;display:{{ desktopFlex }};align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 12px 0;pointer-events:none;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px;pointer-events:auto;flex-wrap:wrap">
+      <span style="font-size:14px;font-weight:600;color:#dfeed4;white-space:nowrap">{{ levelName }}</span>
+      <span style="font-family:'SF Mono',ui-monospace,monospace;font-size:12px;color:#7b9169;padding:0 2px;white-space:nowrap">{{ countLabel }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;pointer-events:auto">
+      <sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ false }}">
+        <input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Пошук думки" spellCheck="{{ false }}" style="width:170px;height:28px;background:#131a0e;border:1px solid #2f3d25;border-radius:6px;padding:0 10px;color:#dfeed4;font:400 13px 'SF Pro Text',sans-serif;outline:none"></input>
+      </sc-if>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="invisible" size="small" onClick="{{ toggleSearch }}" hint-size="auto,28px">Пошук</x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="{{ focusVariant }}" size="small" onClick="{{ toggleFocus }}" hint-size="auto,28px">Фокус</x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="invisible" size="small" onClick="{{ toggleSound }}" hint-size="auto,28px">{{ soundLabel }}</x-import>
+    </div>
+  </div>
+
+  <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);display:{{ desktopFlexCol }};flex-direction:column;align-items:flex-end;pointer-events:auto">
+    <span style="font-family:'SF Mono',ui-monospace,monospace;font-size:9px;letter-spacing:0.08em;color:#7b9169;margin-bottom:4px">МАСШТАБ</span>
+    <sc-for list="{{ rulerItems }}" as="r" hint-placeholder-count="5">
+      <button type="button" onClick="{{ r.onClick }}" title="{{ r.label }}" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;background:transparent;border:0;padding:0 0 0 14px;cursor:pointer;height:44px">
+        <span style="font-family:'SF Mono',ui-monospace,monospace;font-size:10px;white-space:nowrap;color:{{ r.color }}">{{ r.label }}</span>
+        <span style="display:block;height:1px;width:{{ r.tick }};background:{{ r.color }}"></span>
+      </button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none;text-align:center;padding:0 24px">
+      <span style="font-size:16px;font-weight:600;color:#dfeed4">{{ emptyTitle }}</span>
+      <span style="font-size:13px;color:#7b9169;max-width:320px;text-wrap:pretty">{{ emptyBody }}</span>
+    </div>
+  </sc-if>
+
+  <sc-for list="{{ clusterLabels }}" as="c" hint-placeholder-count="0">
+    <div style="position:absolute;left:0;top:0;pointer-events:none;transform:{{ c.tf }}">
+      <span style="display:block;transform:translate(-50%,-50%);background:#1a2314;border:1px solid #2f3d25;border-radius:9999px;padding:2px 8px;font-family:'SF Mono',ui-monospace,monospace;font-size:10px;letter-spacing:0.04em;color:#dfeed4;white-space:nowrap">{{ c.label }}</span>
+    </div>
+  </sc-for>
+
+  <sc-if value="{{ hoverVisible }}" hint-placeholder-val="{{ false }}">
+    <div ref="{{ hoverRef }}" style="position:absolute;left:0;top:0;pointer-events:none;will-change:transform;animation:tip-in 120ms linear">
+      <div style="transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;background:#1a2314;border:1px solid #2f3d25;border-radius:6px;padding:5px 10px">
+        <span style="font-size:13px;color:#dfeed4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px">{{ hoverText }}</span>
+        <sc-if value="{{ hoverMeta }}" hint-placeholder-val="{{ false }}">
+          <span style="font-family:'SF Mono',ui-monospace,monospace;font-size:10px;color:#7b9169">{{ hoverMeta }}</span>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div ref="{{ menuRef }}" style="position:absolute;left:0;top:0;will-change:transform">
+      <div style="position:relative;width:0;height:0;animation:menu-in 140ms cubic-bezier(0.33,1,0.68,1)">
+        <sc-for list="{{ menuItems }}" as="m" hint-placeholder-count="0">
+          <button type="button" onClick="{{ m.onClick }}" title="{{ m.label }}" style="position:absolute;left:{{ m.left }};top:{{ m.top }};transform:translate(-50%,-50%);min-width:44px;height:44px;padding:0 13px;border-radius:9999px;border:1px solid #2f3d25;background:#1a2314;color:#dfeed4;font:600 12px 'SF Pro Text',sans-serif;cursor:pointer;white-space:nowrap" style-hover="background:#232e1b;border-color:#435434">{{ m.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
+    <div ref="{{ editRef }}" style="position:absolute;left:0;top:0;will-change:transform">
+      <input value="{{ editValue }}" onChange="{{ onEditChange }}" onKeyDown="{{ onEditKeyDown }}" onBlur="{{ onEditBlur }}" autoFocus="{{ true }}" placeholder="Сформулюй думку…" spellCheck="{{ false }}" style="transform:translateX(-50%);width:250px;background:#0d1209;border:1px solid #64fe13;border-radius:6px;padding:8px 10px;color:#dfeed4;font:400 13px 'SF Pro Text',sans-serif;outline:none;box-shadow:0 0 0 1px rgba(100,254,19,0.45),0 0 18px rgba(100,254,19,0.28)"></input>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ airStrip }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;top:64px;transform:translateX(-50%);max-width:min(92vw,620px);pointer-events:none;animation:air-in 160ms linear">
+      <div style="display:flex;align-items:center;gap:10px;background:#131a0e;border:1px solid #2f3d25;border-radius:9999px;padding:6px 14px">
+        <span style="width:7px;height:7px;border-radius:50%;background:#64fe13;box-shadow:0 0 0 3px rgba(100,254,19,0.18)"></span>
+        <span style="font-size:13px;color:#dfeed4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ airStrip }}</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:14px;bottom:calc(76px + env(safe-area-inset-bottom));pointer-events:none;animation:toast-in 160ms cubic-bezier(0.33,1,0.68,1)">
+      <span style="display:block;background:#1a2314;border:1px solid #2f3d25;border-radius:6px;padding:5px 10px;font-family:'SF Mono',ui-monospace,monospace;font-size:11px;color:#dfeed4">{{ toast }}</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#131a0e;border-top:1px solid #2f3d25;padding:8px 10px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px">
+      <sc-if value="{{ sheet }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-bottom:6px;border-bottom:1px solid #2f3d25">
+          <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="large" block="{{ true }}" onClick="{{ tidy }}" hint-size="100%,40px">Впорядкувати</x-import>
+          <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="{{ focusVariant }}" size="large" block="{{ true }}" onClick="{{ toggleFocus }}" hint-size="100%,40px">Фокус</x-import>
+          <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="large" block="{{ true }}" onClick="{{ undo }}" hint-size="100%,40px">Крок назад</x-import>
+          <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="invisible" size="large" block="{{ true }}" onClick="{{ toggleSound }}" hint-size="100%,40px">{{ soundLabel }}</x-import>
+          <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="large" block="{{ true }}" onClick="{{ exportPng }}" hint-size="100%,40px">PNG</x-import>
+          <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="large" block="{{ true }}" onClick="{{ exportText }}" hint-size="100%,40px">Текст</x-import>
+          <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="{{ airVariant }}" size="large" block="{{ true }}" onClick="{{ toggleAir }}" hint-size="100%,40px">{{ airLabel }}</x-import>
+        </div>
+      </sc-if>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
+        <sc-for list="{{ scaleItems }}" as="s" hint-placeholder-count="4">
+          <button type="button" onClick="{{ s.onClick }}" style="flex:0 0 auto;height:44px;padding:0 14px;border-radius:9999px;border:1px solid {{ s.border }};background:{{ s.bg }};color:{{ s.fg }};font:600 12px 'SF Pro Text',sans-serif;cursor:pointer;white-space:nowrap">{{ s.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div role="group" aria-label="Режим" style="display:flex;gap:6px">
+          <sc-for list="{{ modeChips }}" as="m" hint-placeholder-count="3">
+            <button type="button" onClick="{{ m.onClick }}" style="height:44px;padding:0 14px;border-radius:9999px;border:1px solid {{ m.border }};background:{{ m.bg }};color:{{ m.fg }};font:600 12px 'SF Pro Text',sans-serif;cursor:pointer;white-space:nowrap">{{ m.label }}</button>
+          </sc-for>
+        </div>
+        <span style="flex:1 1 auto"></span>
+        <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="primary" size="large" onClick="{{ addThought }}" hint-size="auto,40px">{{ addLabel }}</x-import>
+      </div>
+      <span style="font-family:'SF Mono',ui-monospace,monospace;font-size:10px;color:#7b9169;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ hint }}</span>
+    </div>
+  </sc-if>
+  <div style="position:absolute;bottom:0;left:0;right:0;display:{{ desktopFlexCol }};flex-direction:column;align-items:center;gap:8px;padding:8px 12px calc(12px + env(safe-area-inset-bottom));pointer-events:none">
+    <span style="font-family:'SF Mono',ui-monospace,monospace;font-size:11px;color:#7b9169;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(100%,780px)">{{ hint }}</span>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;pointer-events:auto">
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.SegmentedControl" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" items="{{ modeItems }}" selectedIndex="{{ modeIndex }}" onSelect="{{ setMode }}" size="medium" ariaLabel="Режим" hint-size="220px,32px"></x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="primary" size="medium" onClick="{{ addThought }}" hint-size="auto,32px">{{ addLabel }}</x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="medium" onClick="{{ tidy }}" hint-size="auto,32px">Впорядкувати</x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="medium" onClick="{{ undo }}" hint-size="auto,32px">Крок назад</x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="medium" onClick="{{ exportPng }}" hint-size="auto,32px">PNG</x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="default" size="medium" onClick="{{ exportText }}" hint-size="auto,32px">Текст</x-import>
+      <x-import component-from-global-scope="PrimerDesignSystem_285f8d.Button" from="_ds/myfpv-design-system-285f8df2-f11c-49b5-87b4-21919d8cc60c/_ds_bundle.js" variant="{{ airVariant }}" size="medium" onClick="{{ toggleAir }}" hint-size="auto,32px">{{ airLabel }}</x-import>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;membrane&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.5, &quot;min&quot;: 0.25, &quot;max&quot;: 0.8, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Метаболи&quot;}, &quot;fuseRange&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1.5, &quot;min&quot;: 1.05, &quot;max&quot;: 2.4, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Метаболи&quot;}, &quot;gel&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Метаболи&quot;}, &quot;mergeDistance&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 260, &quot;min&quot;: 160, &quot;max&quot;: 400, &quot;step&quot;: 10, &quot;unit&quot;: &quot;px&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Фізика&quot;}, &quot;gravity&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Фізика&quot;}, &quot;drift&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Фізика&quot;}, &quot;grain&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Ефекти&quot;}, &quot;clusters&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Ефекти&quot;}, &quot;decayDays&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 14, &quot;min&quot;: 0, &quot;max&quot;: 90, &quot;unit&quot;: &quot;дн&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Ефекти&quot;}}">
+const KEY = 'mind-canvas-v2';
+const CATS = ['#a8bd97', '#d3c48c', '#b2a6c8', '#a6b0c8', '#d3ab8c', '#5a4646'];
+const CAT_NAMES = ['нейтральна', 'увага', 'ідея', 'питання', 'ризик', 'у горизонт'];
+const LINK_KINDS = ["звичайний", 'причина', 'протиріччя', 'приклад'];
+const LINK_TONE = ['100,254,19', '100,254,19', '217,154,154', '211,196,140'];
+const SCALE_NAMES = ['Полотно', 'Думка', 'Піддумки', 'Деталі'];
+const BG = [13, 18, 9];
+function plural(n, f) {
+  const a = n % 10, b = n % 100;
+  if (a === 1 && b !== 11) return f[0];
+  if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return f[1];
+  return f[2];
+}
+function towardBg(hex, t) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return 'rgb(' + Math.round(r + (BG[0] - r) * t) + ',' + Math.round(g + (BG[1] - g) * t) + ',' + Math.round(b + (BG[2] - b) * t) + ')';
+}
+// Метаболи: порт скрипта SATO Hiroyuki (paper.js) на Canvas 2D
+function metaballPath(b1, b2, v, hlr, maxD) {
+  const r1 = b1.r, r2 = b2.r;
+  if (!r1 || !r2) return null;
+  const dx = b2.x - b1.x, dy = b2.y - b1.y;
+  const d = Math.hypot(dx, dy);
+  if (d > maxD || d <= Math.abs(r1 - r2) || d === 0) return null;
+  let u1 = 0, u2 = 0;
+  if (d < r1 + r2) {
+    u1 = Math.acos((r1 * r1 + d * d - r2 * r2) / (2 * r1 * d));
+    u2 = Math.acos((r2 * r2 + d * d - r1 * r1) / (2 * r2 * d));
+  }
+  const a1 = Math.atan2(dy, dx), a2 = Math.acos((r1 - r2) / d);
+  const a1a = a1 + u1 + (a2 - u1) * v, a1b = a1 - u1 - (a2 - u1) * v;
+  const a2a = a1 + Math.PI - u2 - (Math.PI - u2 - a2) * v;
+  const a2b = a1 - Math.PI + u2 + (Math.PI - u2 - a2) * v;
+  const P = (cx, cy, a, r) => [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+  const p1a = P(b1.x, b1.y, a1a, r1), p1b = P(b1.x, b1.y, a1b, r1);
+  const p2a = P(b2.x, b2.y, a2a, r2), p2b = P(b2.x, b2.y, a2b, r2);
+  let d2 = Math.min(v * hlr, Math.hypot(p1a[0] - p2a[0], p1a[1] - p2a[1]) / (r1 + r2));
+  d2 *= Math.min(1, d * 2 / (r1 + r2));
+  const V = (a, r) => [Math.cos(a) * r, Math.sin(a) * r], pi2 = Math.PI / 2;
+  return { p1a, p2a, p2b, p1b, h1a: V(a1a - pi2, r1 * d2), h2a: V(a2a + pi2, r2 * d2), h2b: V(a2b - pi2, r2 * d2), h1b: V(a1b + pi2, r1 * d2) };
+}
+function drawMeta(ctx, m) {
+  ctx.moveTo(m.p1a[0], m.p1a[1]);
+  ctx.bezierCurveTo(m.p1a[0] + m.h1a[0], m.p1a[1] + m.h1a[1], m.p2a[0] + m.h2a[0], m.p2a[1] + m.h2a[1], m.p2a[0], m.p2a[1]);
+  ctx.lineTo(m.p2b[0], m.p2b[1]);
+  ctx.bezierCurveTo(m.p2b[0] + m.h2b[0], m.p2b[1] + m.h2b[1], m.p1b[0] + m.h1b[0], m.p1b[1] + m.h1b[1], m.p1b[0], m.p1b[1]);
+  ctx.closePath();
+}
+// стяжка народжується лише в останній момент стягування
+function fuseV(a, b, vmax, mul) {
+  const R = a.r + b.r, maxD = R * mul, near = R * 0.92;
+  const d = Math.hypot(b.x - a.x, b.y - a.y);
+  if (d > maxD) return 0;
+  const e = Math.min(1, Math.max(0, maxD > near ? (maxD - d) / (maxD - near) : 1));
+  return vmax * e * e;
+}
+function circle(ctx, n, r) { ctx.moveTo(n.x + r, n.y); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); }
+function nearPairs(list, maxD) {
+  const cell = Math.max(48, maxD), grid = new Map(), out = [];
+  for (let i = 0; i < list.length; i++) {
+    const k = Math.floor(list[i].x / cell) + ',' + Math.floor(list[i].y / cell);
+    let a = grid.get(k); if (!a) { a = []; grid.set(k, a); } a.push(i);
+  }
+  const offs = [[0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+  grid.forEach((idx, k) => {
+    const c = k.split(',').map(Number);
+    for (const o of offs) {
+      const other = o[0] === 0 && o[1] === 0 ? idx : grid.get((c[0] + o[0]) + ',' + (c[1] + o[1]));
+      if (!other) continue;
+      for (let a = 0; a < idx.length; a++) {
+        for (let b = other === idx ? a + 1 : 0; b < other.length; b++) {
+          const p = list[idx[a]], q = list[other[b]];
+          if (Math.hypot(q.x - p.x, q.y - p.y) <= maxD) out.push([p, q]);
+        }
+      }
+    }
+  });
+  return out;
+}
+
+class Sound {
+  constructor() { this.on = false; this.ctx = null; }
+  ensure() {
+    if (this.ctx) return this.ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    this.ctx = new AC();
+    this.master = this.ctx.createGain();
+    this.master.gain.value = 0.5;
+    this.master.connect(this.ctx.destination);
+    return this.ctx;
+  }
+  startAmbient() {
+    const c = this.ensure(); if (!c || this.amb) return;
+    const g = c.createGain(); g.gain.value = 0;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 320;
+    const o1 = c.createOscillator(); o1.type = 'sine'; o1.frequency.value = 55;
+    const o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = 82.4;
+    const lfo = c.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.07;
+    const lg = c.createGain(); lg.gain.value = 0.016;
+    lfo.connect(lg); lg.connect(g.gain);
+    o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(this.master);
+    o1.start(); o2.start(); lfo.start();
+    g.gain.linearRampToValueAtTime(0.026, c.currentTime + 3);
+    this.amb = { g, o1, o2, lfo, lp };
+  }
+  tune(f) {
+    if (!this.amb) return;
+    try { this.amb.o1.frequency.value = f; this.amb.o2.frequency.value = f * 1.5; this.amb.lp.frequency.value = 240 + f * 2; } catch (e) {}
+  }
+  stopAmbient() {
+    if (!this.amb) return;
+    const c = this.ctx, a = this.amb; this.amb = null;
+    a.g.gain.cancelScheduledValues(c.currentTime);
+    a.g.gain.linearRampToValueAtTime(0, c.currentTime + 0.4);
+    setTimeout(() => { try { a.o1.stop(); a.o2.stop(); a.lfo.stop(); } catch (e) {} }, 600);
+  }
+  blip(freq, dur, type, vol) {
+    if (!this.on) return;
+    const c = this.ensure(); if (!c) return;
+    if (c.state === 'suspended') c.resume();
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol || 0.1, c.currentTime + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + (dur || 0.16));
+    o.connect(g); g.connect(this.master);
+    o.start(); o.stop(c.currentTime + (dur || 0.16) + 0.02);
+  }
+  slide(f1, f2, dur) {
+    if (!this.on) return;
+    const c = this.ensure(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(f1, c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f2, c.currentTime + dur);
+    g.gain.setValueAtTime(0.0001, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.08, c.currentTime + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    o.connect(g); g.connect(this.master);
+    o.start(); o.stop(c.currentTime + dur + 0.02);
+  }
+}
+
+class Component extends DCLogic {
+  state = { count: 0, hoverId: null, editingId: null, editValue: '', path: [], mode: 0, search: '', searchOpen: false, focus: false, soundOn: false, menuId: null, clusters: [], toast: '', mobile: false, sheet: false, air: 0 };
+  videoRef = React.createRef();
+  airGrab = null; thread = null; gazeId = null; airBound = false;
+  bgRef = React.createRef(); fieldRef = React.createRef(); fxRef = React.createRef();
+  hoverRef = React.createRef(); editRef = React.createRef(); menuRef = React.createRef(); grainRef = React.createRef();
+  all = []; links = new Set(); history = []; linkBorn = new Map(); linkMeta = new Map();
+  cursor = { x: -999, y: -999, tx: -999, ty: -999, r: 42, active: false };
+  trail = []; ripples = []; membranes = new Set();
+  drag = null; linkFrom = null; press = null; gather = false;
+  pointers = new Map(); pinch = null; wheelAcc = 0;
+  selectedId = null; lastTap = 0; lastTapId = null;
+  trans = 1; zoomDir = 1; clusterCache = [];
+  sound = new Sound(); raf = 0; lastT = 0; clusterT = 0; w = 0; h = 0; dpr = 1;
+
+  componentDidMount() {
+    this.ctxs = {};
+    this.onResize = () => {
+      const c = this.fxRef.current; if (!c) return;
+      this.dpr = Math.min(2, window.devicePixelRatio || 1);
+      this.w = c.clientWidth; this.h = c.clientHeight;
+      const mob = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || this.w < 760;
+      if (mob !== this.state.mobile) this.setState({ mobile: mob, sheet: false });
+      for (const r of [this.bgRef, this.fieldRef, this.fxRef]) {
+        const el = r.current; if (!el) continue;
+        el.width = Math.round(this.w * this.dpr); el.height = Math.round(this.h * this.dpr);
+      }
+      this.ctxs.bg = this.bgRef.current.getContext('2d');
+      this.ctxs.field = this.fieldRef.current.getContext('2d');
+      this.ctxs.fx = this.fxRef.current.getContext('2d');
+    };
+    this.onResize();
+    window.addEventListener('resize', this.onResize);
+    this.onKeyDown = (e) => {
+      if (e.key === 'Shift') this.gather = true;
+      const t = e.target;
+      if (this.state.editingId || (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'))) return;
+      const k = e.key.toLowerCase();
+      if ((e.metaKey || e.ctrlKey) && k === 'z') { e.preventDefault(); this.undo(); return; }
+      if (k === 'n') { e.preventDefault(); this.newThought(); }
+      if (k === 'f') { e.preventDefault(); this.setState({ focus: !this.state.focus }); }
+      if (k === 't' && this.selectedId) this.cycleCat(this.selectedId);
+      if (k === 'enter' || k === 'Enter') { const n = this.all.find(x => x.id === this.selectedId); if (n) this.startEdit(n); }
+      if (k === 'tab') { e.preventDefault(); this.cycleSelection(e.shiftKey ? -1 : 1); }
+      if ((k === 'delete' || k === 'backspace') && this.selectedId) { e.preventDefault(); this.remove(this.selectedId); }
+      if (k === 'escape') { this.selectedId = null; this.setState({ menuId: null }); }
+      if (e.key === 'ArrowUp') this.shallower();
+      if (e.key === 'ArrowDown') this.deeper();
+    };
+    this.onKeyUp = (e) => { if (e.key === 'Shift') this.gather = false; };
+    window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('keyup', this.onKeyUp);
+    // ступінчастий скрол: один жест = один рівень
+    this.onWheel = (e) => {
+      e.preventDefault();
+      if (this.trans < 0.85) return;
+      this.wheelAcc += e.deltaY;
+      clearTimeout(this.wheelT);
+      this.wheelT = setTimeout(() => { this.wheelAcc = 0; }, 220);
+      if (Math.abs(this.wheelAcc) > 150) {
+        const down = this.wheelAcc > 0;
+        this.wheelAcc = 0;
+        if (down) this.deeper(); else this.shallower();
+      }
+    };
+    const fx = this.fxRef.current;
+    if (fx) fx.addEventListener('wheel', this.onWheel, { passive: false });
+    this.load();
+    this.applyFilters();
+    this.recluster();
+    this.raf = requestAnimationFrame(this.tick);
+  }
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('keyup', this.onKeyUp);
+    const fx = this.fxRef.current;
+    if (fx) fx.removeEventListener('wheel', this.onWheel);
+    this.sound.stopAmbient();
+    if (window.AirHands) window.AirHands.stop();
+  }
+  componentDidUpdate() { this.applyFilters(); }
+  applyFilters() {
+    const f = this.fieldRef.current;
+    if (f) f.style.filter = (this.props.gel ?? true) ? 'url(#gel4)' : 'none';
+    const g = this.grainRef.current;
+    if (g) g.style.display = (this.props.grain ?? true) ? 'block' : 'none';
+  }
+
+  // ── Air: руки, жести, голос ──
+  async toggleAir() {
+    const A = window.AirHands;
+    if (this.state.air === 1) return;
+    if (this.state.air === 2) {
+      A.stop();
+      this.airGrab = null; this.thread = null; this.gazeId = null;
+      this.cursor.active = false;
+      this.setState({ air: 0 });
+      this.toast('Air вимкнено');
+      return;
+    }
+    if (!A) { this.toast('Air-модуль не завантажився'); return; }
+    this.setState({ air: 1 });
+    this.toast('Прошу камеру…');
+    try {
+      this.bindAir();
+      await A.start({ video: this.videoRef.current });
+      this.setState({ air: 2 });
+      this.toast('Air: палець — курсор, щіпка — взяти');
+    } catch (e) {
+      this.setState({ air: 0 });
+      this.toast('Камера не піднялась: ' + (A.error || 'помилка'));
+    }
+  }
+  airPos(e) { return window.AirHands.toScreen(e.x, e.y, this.w, this.h); }
+  nearestNode(x, y) {
+    let best = null, bd = 1e9;
+    for (const n of this.nodes) { if (n.dying) continue; const d = Math.hypot(x - n.x, y - n.y); if (d < bd) { bd = d; best = n; } }
+    return best;
+  }
+  spreadCluster(p) {
+    const n = this.pick(p.x, p.y) || this.nearestNode(p.x, p.y);
+    if (!n) return;
+    this.snapshot();
+    const comp = this.component(n.id);
+    const members = this.nodes.filter(x => comp.has(x.id));
+    if (members.length < 2) return;
+    const cx = members.reduce((s, x) => s + x.x, 0) / members.length;
+    const cy = members.reduce((s, x) => s + x.y, 0) / members.length;
+    for (const m of members) {
+      const nx = cx + (m.x - cx) * 1.45, ny = cy + (m.y - cy) * 1.45;
+      if (m.via) { m.orbR = Math.hypot(nx - cx, ny - cy); m.orbFixed = true; }
+      else m.home = { x: nx, y: ny };
+    }
+    this.sound.blip(360, 0.16, 'triangle', 0.06);
+    this.toast('Кластер розсунуто');
+    this.save();
+  }
+  airEdit(n) {
+    const A = window.AirHands;
+    this.startEdit(n);
+    A.resetVoice();
+    if (!A.startVoice('uk-UA')) this.toast('Голос тут не працює — набери текст');
+    else this.toast('Говори — думка наповнюється');
+  }
+  airCommit() {
+    const A = window.AirHands;
+    if (!this.state.editingId) return;
+    A.stopVoice();
+    this.commitEdit();
+  }
+  bindAir() {
+    if (this.airBound) return;
+    this.airBound = true;
+    const A = window.AirHands;
+    A.on('point', (e) => {
+      if (this.state.air !== 2) return;
+      const p = this.airPos(e);
+      this.cursor.tx = p.x; this.cursor.ty = p.y; this.cursor.active = true;
+      if (!this.airGrab) {
+        const h = this.pick(p.x, p.y);
+        const id = h ? h.id : null;
+        if (id !== this.state.hoverId) this.setState({ hoverId: id });
+      }
+      if (e.drawing) {
+        if (!this.thread) { const n = this.pick(p.x, p.y); if (n) { this.thread = { from: n.id, pts: [p] }; this.buzz(10); } }
+        else { this.thread.pts.push(p); if (this.thread.pts.length > 70) this.thread.pts.shift(); }
+      } else if (this.thread) {
+        const t = this.pick(p.x, p.y);
+        if (t && t.id !== this.thread.from) this.toggleLink(this.thread.from, t.id);
+        this.thread = null;
+      }
+    });
+    A.on('pinchStart', (e) => {
+      if (this.state.air !== 2 || e.slot !== 0) return;
+      const p = this.airPos(e);
+      if (this.state.editingId) this.airCommit();
+      const n = this.pick(p.x, p.y);
+      if (n) {
+        this.airGrab = n.id;
+        this.selectedId = n.id;
+        this.drag = { id: n.id, ox: 0, oy: 0, lx: p.x, ly: p.y };
+        n.touched = Date.now();
+        this.buzz(14);
+        this.sound.blip(520, 0.09, 'sine', 0.06);
+      } else {
+        const nn = this.create(p, false);
+        this.selectedId = nn.id;
+        this.airEdit(nn);
+      }
+    });
+    A.on('pinchMove', (e) => {
+      if (this.state.air !== 2 || e.slot !== 0 || !this.airGrab) return;
+      const p = this.airPos(e);
+      const n = this.all.find(x => x.id === this.airGrab);
+      if (!n) return;
+      n.vx = (p.x - n.x) * 0.35; n.vy = (p.y - n.y) * 0.35;
+      n.x = p.x; n.y = p.y;
+    });
+    A.on('pinchEnd', (e) => {
+      if (!this.airGrab) return;
+      const n = this.all.find(x => x.id === this.airGrab);
+      this.airGrab = null; this.drag = null;
+      if (!n) return;
+      const b = this.bounds();
+      if (n.x < b.l - 4 || n.y < b.t - 4 || n.x > this.w - b.r + 4 || n.y > this.h - b.b + 4) {
+        this.remove(n.id);
+        this.toast('Викинуто за край');
+        return;
+      }
+      const par = n.via ? this.all.find(x => x.id === n.via) : null;
+      if (par) { n.orbA = Math.atan2(n.y - par.y, n.x - par.x); n.orbR = Math.max(par.r + n.r + 18, Math.hypot(n.x - par.x, n.y - par.y)); n.orbFixed = true; }
+      else n.home = { x: n.x, y: n.y };
+      n.vx = 0; n.vy = 0;
+      this.save();
+    });
+    A.on('spread', (e) => {
+      if (this.state.air !== 2) return;
+      const p = this.airPos(e);
+      const n = this.pick(p.x, p.y) || this.nearestNode(p.x, p.y);
+      if (n) { this.buzz(18); this.deeper(n.id); }
+    });
+    A.on('pinchTogether', () => { if (this.state.air === 2 && this.state.path.length) { this.buzz(18); this.shallower(); } });
+    A.on('palmHold', () => {
+      if (this.state.air !== 2) return;
+      this.gather = true;
+      clearTimeout(this.gatherT);
+      this.gatherT = setTimeout(() => { this.gather = false; }, 1800);
+      this.toast('Збираю думки');
+      this.buzz([10, 30, 10]);
+    });
+    A.on('victoryHold', () => { if (this.state.air === 2) { const m = (this.state.mode + 1) % 3; this.setState({ mode: m }); this.toast('Режим: ' + ['Рух', "Зв'язок", 'Збір'][m]); } });
+    A.on('fistShake', () => { if (this.state.air === 2) { this.tidy(); this.buzz(24); } });
+    A.on('twoPalms', (e) => { if (this.state.air === 2) this.spreadCluster(this.airPos(e)); });
+    A.on('speech', (e) => {
+      if (this.state.air !== 2 || !this.state.editingId) return;
+      this.setState({ editValue: e.text });
+    });
+  }
+  drawAir() {
+    const A = window.AirHands;
+    const fx = this.ctxs && this.ctxs.fx;
+    if (!fx || this.state.air !== 2 || !A) return;
+    fx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    fx.globalAlpha = 1;
+    const c = A.cover(this.w, this.h);
+    const X = p => c.ox + (A.mirror ? 1 - p.x : p.x) * c.dw;
+    const Y = p => c.oy + p.y * c.dh;
+    fx.save();
+    fx.lineCap = 'round'; fx.lineJoin = 'round';
+    if (this.thread && this.thread.pts.length > 1) {
+      fx.strokeStyle = 'rgba(100,254,19,0.85)';
+      fx.lineWidth = 2;
+      fx.setLineDash([6, 5]);
+      fx.beginPath();
+      fx.moveTo(this.thread.pts[0].x, this.thread.pts[0].y);
+      for (const q of this.thread.pts) fx.lineTo(q.x, q.y);
+      fx.stroke();
+      fx.setLineDash([]);
+    }
+    if (this.gazeId) {
+      const g = this.nodes.find(n => n.id === this.gazeId);
+      if (g) {
+        const p = this.proj();
+        const sx = p.cx + (g.x - this.w / 2) * p.s, sy = p.cy + (g.y - this.h / 2) * p.s;
+        fx.strokeStyle = 'rgba(223,238,212,0.4)';
+        fx.lineWidth = 1;
+        fx.setLineDash([2, 4]);
+        fx.beginPath(); fx.arc(sx, sy, (g.r + 12) * p.s, 0, Math.PI * 2); fx.stroke();
+        fx.setLineDash([]);
+      }
+    }
+    fx.strokeStyle = 'rgba(100,254,19,0.7)';
+    fx.lineWidth = 2;
+    fx.beginPath();
+    for (const lm of A.hands) for (const cn of (A.HCONN || [])) {
+      const a = lm[cn.start], b = lm[cn.end];
+      fx.moveTo(X(a), Y(a)); fx.lineTo(X(b), Y(b));
+    }
+    fx.stroke();
+    fx.fillStyle = 'rgba(223,238,212,0.9)';
+    fx.beginPath();
+    for (const lm of A.hands) for (const p of lm) { fx.moveTo(X(p) + 2.6, Y(p)); fx.arc(X(p), Y(p), 2.6, 0, Math.PI * 2); }
+    fx.fill();
+    for (let i = 0; i < A.hands.length; i++) {
+      const tip = A.hands[i][8], s = A.slots[i];
+      const tx = X(tip), ty = Y(tip);
+      fx.fillStyle = s && s.on ? '#64fe13' : 'rgba(100,254,19,0.55)';
+      fx.beginPath(); fx.arc(tx, ty, s && s.on ? 9 : 5, 0, Math.PI * 2); fx.fill();
+    }
+    fx.restore();
+  }
+  key(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+  get parentId() { const p = this.state.path; return p.length ? p[p.length - 1] : null; }
+  level(pid) { return this.all.filter(n => (n.parent || null) === (pid || null)); }
+  get nodes() { return this.level(this.parentId).filter(n => !n.hidden); }
+  get depth() { return this.state.path.length; }
+  childCount(id) { return this.all.filter(n => n.parent === id).length; }
+  degrees() {
+    const d = {};
+    this.links.forEach(k => { const s = k.split('|'); d[s[0]] = (d[s[0]] || 0) + 1; d[s[1]] = (d[s[1]] || 0) + 1; });
+    return d;
+  }
+  component(id) {
+    const seen = new Set([id]), q = [id];
+    while (q.length) {
+      const cur = q.pop();
+      this.links.forEach(k => {
+        const s = k.split('|');
+        if (s[0] === cur && !seen.has(s[1])) { seen.add(s[1]); q.push(s[1]); }
+        if (s[1] === cur && !seen.has(s[0])) { seen.add(s[0]); q.push(s[0]); }
+      });
+    }
+    return seen;
+  }
+  bounds() {
+    const mob = this.state.mobile;
+    return { l: 58, r: mob ? 30 : 150, t: mob ? 104 : 100, b: mob ? 200 : 116 };
+  }
+  horizonAt() { const b = this.bounds(); return { x: this.w * 0.5, y: this.h - b.b - 56 }; }
+  viewNodes() { return this.nodes; }
+
+  toast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this.toastT);
+    this.toastT = setTimeout(() => this.setState({ toast: '' }), 1900);
+  }
+  snapshot() {
+    this.history.push(JSON.stringify({ all: this.all.map(n => ({ ...n })), links: [...this.links] }));
+    if (this.history.length > 50) this.history.shift();
+  }
+  undo = () => {
+    const s = this.history.pop();
+    if (!s) { this.toast('Нічого скасовувати'); return; }
+    const d = JSON.parse(s);
+    this.all = d.all; this.links = new Set(d.links);
+    this.selectedId = null;
+    this.setState({ count: this.nodes.length, menuId: null, editingId: null });
+    this.save();
+    this.sound.blip(220, 0.12, 'triangle', 0.07);
+    this.toast('Крок назад');
+  };
+  load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && Array.isArray(d.nodes) && d.nodes.length) {
+          this.all = d.nodes.map(n => this.hydrate(n));
+          this.links = new Set();
+          this.linkMeta = new Map();
+          (d.links || []).forEach(e => {
+            if (typeof e === 'string') { this.links.add(e); return; }
+            if (Array.isArray(e) && e[0]) { this.links.add(e[0]); this.linkMeta.set(e[0], { k: e[1] || 0, from: e[2] || '' }); }
+          });
+          this.setState({ count: this.nodes.length });
+          this.fitToView();
+          return;
+        }
+      }
+    } catch (e) {}
+    this.seed();
+  }
+  hydrate(n) {
+    return {
+      id: String(n.id), parent: n.parent || null, x: +n.x, y: +n.y, text: String(n.text || ''),
+      cat: n.cat || 0, created: n.created || Date.now(), touched: n.touched || Date.now(),
+      vx: 0, vy: 0, r: 16, alpha: 0, _bk: 4, temp: 0, seed: Math.random() * 6.28,
+      hidden: !!n.hidden, collapsed: n.collapsed || null,
+      home: { x: +n.x, y: +n.y }, via: null, orbA: 0, orbR: 0, orbFixed: false, orbDir: Math.random() < 0.5 ? -1 : 1
+    };
+  }
+  // канвас-іхерархія: найзв'язніша думка кластера тримає місце, решта дрейфує біля неї
+  rehome() {
+    const deg = this.degrees();
+    const levels = new Map();
+    for (const n of this.all) {
+      const k = n.parent || '@root';
+      let a = levels.get(k); if (!a) { a = []; levels.set(k, a); } a.push(n);
+    }
+    levels.forEach(list => {
+      const ids = new Set(list.map(n => n.id));
+      const seen = new Set();
+      const order = list.slice().sort((a, b) => (deg[b.id] || 0) - (deg[a.id] || 0));
+      for (const root of order) {
+        if (seen.has(root.id)) continue;
+        seen.add(root.id);
+        root.via = null;
+        const q = [root];
+        while (q.length) {
+          const cur = q.shift();
+          const kids = [];
+          this.links.forEach(k => {
+            const s = k.split('|');
+            const other = s[0] === cur.id ? s[1] : s[1] === cur.id ? s[0] : null;
+            if (!other || seen.has(other) || !ids.has(other)) return;
+            const n = list.find(x => x.id === other);
+            if (!n) return;
+            seen.add(other);
+            n.via = cur.id;
+            kids.push(n);
+          });
+          kids.forEach((n, i) => {
+            if (!n.orbFixed) {
+              // рівні слоти по колу: чим більше дітей, тим ширша орбіта
+              n.orbA = (i / Math.max(1, kids.length)) * Math.PI * 2 + (cur.seed || 0);
+              n.orbR = cur.r + n.r + 40 + kids.length * 11 + (i % 2) * 26;
+            }
+            q.push(n);
+          });
+        }
+      }
+    });
+  }
+  seed() {
+    const cx = (this.w || 1200) / 2, cy = (this.h || 800) / 2;
+    const root = [['Ядро задуму', 0, -20, 0], ['Дослідження', -260, -150, 3], ['Прототип', 240, -140, 2], ['Фідбек', 300, 140, 1], ['Метафора рідини', -300, 140, 2], ['Кластери тем', -20, 240, 0]];
+    this.all = root.map((s, i) => this.hydrate({ id: 's' + i, parent: null, x: cx + s[1], y: cy + s[2], text: s[0], cat: s[3] }));
+    [["Інтерв'ю", -90, -60], ['Аналог-ринок', 80, -30], ['Гіпотези', -10, 90]].forEach((k, i) => this.all.push(this.hydrate({ id: 's1k' + i, parent: 's1', x: cx + k[1], y: cy + k[2], text: k[0], cat: 3 })));
+    this.links = new Set([this.key('s0', 's1'), this.key('s0', 's2'), this.key('s2', 's3'), this.key('s1k0', 's1k2')]);
+    this.setState({ count: this.nodes.length });
+    this.save();
+  }
+  fitToView() {
+    const bb = this.bounds();
+    const pads = { l: bb.l + 30, r: bb.r + 20, t: bb.t + 20, b: bb.b + 20 };
+    const byLevel = new Map();
+    for (const n of this.all) {
+      const k = n.parent || '@root';
+      let a = byLevel.get(k); if (!a) { a = []; byLevel.set(k, a); } a.push(n);
+    }
+    byLevel.forEach(list => {
+      const xs = list.map(n => n.x), ys = list.map(n => n.y);
+      const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+      const minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+      const availW = this.w - pads.l - pads.r, availH = this.h - pads.t - pads.b;
+      if (availW < 100 || availH < 100) return;
+      const s = Math.min(1, availW / Math.max(1, maxX - minX), availH / Math.max(1, maxY - minY));
+      if (minX > 0 && maxX < this.w && minY > 0 && maxY < this.h && s >= 1) return;
+      const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+      const tx = pads.l + availW / 2, ty = pads.t + availH / 2;
+      list.forEach(n => { n.x = tx + (n.x - cx) * s; n.y = ty + (n.y - cy) * s; n.home = { x: n.x, y: n.y }; n.vx = 0; n.vy = 0; });
+    });
+    this.save();
+  }
+  save() {
+    clearTimeout(this.saveT);
+    this.saveT = setTimeout(() => {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          nodes: this.all.filter(n => !n.dying).map(n => ({ id: n.id, parent: n.parent, x: Math.round(n.x), y: Math.round(n.y), text: n.text, cat: n.cat, created: n.created, touched: n.touched, hidden: !!n.hidden, collapsed: n.collapsed || null })),
+          links: [...this.links].map(k => { const m = this.linkMeta.get(k) || {}; return [k, m.k || 0, m.from || '']; })
+        }));
+      } catch (e) {}
+    }, 300);
+  }
+  buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+  newThought() {
+    this.create({ x: this.w / 2 + (Math.random() - 0.5) * 140, y: this.h / 2 + (Math.random() - 0.5) * 140 }, true, this.selectedId || null);
+  }
+  create(pos, edit, fromId) {
+    this.snapshot();
+    const n = this.hydrate({ id: 'n' + Date.now().toString(36) + Math.floor(Math.random() * 999), parent: this.parentId, x: pos.x, y: pos.y, text: '', cat: 0 });
+    n.r = 4;
+    const src = fromId ? this.all.find(x => x.id === fromId) : null;
+    if (src) {
+      // клітинний поділ: нова думка відділяється від батьківської
+      const a = Math.random() * Math.PI * 2;
+      n.x = src.x + Math.cos(a) * src.r * 0.6;
+      n.y = src.y + Math.sin(a) * src.r * 0.6;
+      n.vx = Math.cos(a) * 3.2; n.vy = Math.sin(a) * 3.2;
+      n.cat = src.cat;
+      n.via = src.id; n.orbA = a; n.orbR = src.r + 26 + 44; n.orbFixed = true;
+      n.home = { x: n.x, y: n.y };
+      this.all.push(n);
+      const k = this.key(src.id, n.id);
+      this.links.add(k);
+      this.linkBorn.set(k, performance.now() / 1000);
+      this.sound.blip(300, 0.18, 'sine', 0.07);
+      setTimeout(() => this.sound.blip(620, 0.12, 'sine', 0.06), 110);
+      this.toast('Поділ від «' + (src.text || 'без назви').slice(0, 18) + '»');
+    } else {
+      this.all.push(n);
+      this.sound.blip(560, 0.14, 'sine', 0.09);
+    }
+    this.buzz(12);
+    this.setState({ count: this.nodes.length });
+    this.save();
+    if (edit) this.startEdit(n);
+    return n;
+  }
+  remove(id) {
+    const n0 = this.all.find(n => n.id === id);
+    this.snapshot();
+    const kill = new Set([id]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const n of this.all) if (n.parent && kill.has(n.parent) && !kill.has(n.id)) { kill.add(n.id); grew = true; }
+    }
+    this.all.forEach(n => { if (kill.has(n.id)) n.dying = true; });
+    this.links = new Set([...this.links].filter(k => { const s = k.split('|'); return !kill.has(s[0]) && !kill.has(s[1]); }));
+    if (this.selectedId === id) this.selectedId = null;
+    this.setState({ count: this.nodes.filter(n => !n.dying).length, hoverId: null, menuId: null });
+    this.sound.blip(170, 0.2, 'sawtooth', 0.06);
+    this.buzz([8, 26, 8]);
+    this.save();
+    this.toast(kill.size > 1 ? 'Видалено з піддумками: ' + kill.size : 'Видалено «' + ((n0 && n0.text) || 'без назви').slice(0, 20) + '»');
+  }
+  toggleLink(a, b) {
+    if (a === b) return;
+    this.snapshot();
+    const k = this.key(a, b);
+    if (this.links.has(k)) { this.links.delete(k); this.sound.blip(300, 0.12, 'sine', 0.06); this.toast("Зв'язок прибрано"); }
+    else {
+      this.links.add(k);
+      this.linkMeta.set(k, { k: 0, from: a });
+      this.linkBorn.set(k, performance.now() / 1000);
+      this.sound.blip(660, 0.1, 'sine', 0.08);
+      setTimeout(() => this.sound.blip(880, 0.12, 'sine', 0.06), 70);
+      this.toast("Зв'язок утворено");
+    }
+    this.buzz(14);
+    this.save();
+    this.forceUpdate();
+  }
+  cycleCat(id) {
+    this.snapshot();
+    const n = this.all.find(n => n.id === id);
+    if (n) { n.cat = (n.cat + 1) % CATS.length; n.touched = Date.now(); this.toast('Тема: ' + CAT_NAMES[n.cat]); }
+    this.sound.blip(420, 0.1, 'triangle', 0.06);
+    this.save();
+    this.forceUpdate();
+  }
+  cycleSelection(dir) {
+    const N = this.viewNodes().filter(n => !n.dying);
+    if (!N.length) return;
+    const i = N.findIndex(n => n.id === this.selectedId);
+    const next = N[((i + dir) % N.length + N.length) % N.length];
+    this.selectedId = next.id;
+    this.setState({ menuId: null, hoverId: next.id });
+    this.sound.blip(480, 0.06, 'sine', 0.04);
+  }
+  startEdit(n) {
+    if (!n || n.agg) return;
+    this.selectedId = n.id;
+    this.setState({ editingId: n.id, editValue: n.text, hoverId: null, menuId: null });
+  }
+  commitEdit() {
+    const id = this.state.editingId; if (!id) return;
+    const n = this.all.find(n => n.id === id);
+    const t = this.state.editValue.trim();
+    if (n) { if (t) { n.text = t; n.touched = Date.now(); } else this.remove(id); }
+    this.setState({ editingId: null, editValue: '' });
+    this.save();
+  }
+  // згортання кластера в одну краплю
+  collapse(id) {
+    const n = this.all.find(x => x.id === id);
+    if (!n) return;
+    const pid = this.parentId || null;
+    const members = [...this.component(id)]
+      .filter(i => i !== id)
+      .map(i => this.all.find(x => x.id === i))
+      .filter(x => x && !x.hidden && (x.parent || null) === pid);
+    if (!members.length) { this.toast('Тут немає що згортати'); return; }
+    this.snapshot();
+    members.forEach(m => { m.hidden = true; });
+    n.collapsed = members.map(m => m.id);
+    n.via = null;
+    this.setState({ count: this.nodes.length, menuId: null, hoverId: null });
+    this.sound.slide(560, 240, 0.3);
+    this.buzz(16);
+    this.save();
+    this.toast('Згорнуто ' + members.length + ' ' + plural(members.length, ['думку', 'думки', 'думок']));
+  }
+  expand(id) {
+    const n = this.all.find(x => x.id === id);
+    if (!n || !n.collapsed) return;
+    this.snapshot();
+    const cnt = n.collapsed.length;
+    n.collapsed.forEach((i, q) => {
+      const m = this.all.find(x => x.id === i);
+      if (!m) return;
+      const a = (q / cnt) * Math.PI * 2;
+      m.hidden = false;
+      m.x = n.x + Math.cos(a) * (n.r + 30);
+      m.y = n.y + Math.sin(a) * (n.r + 30);
+      m.home = { x: m.x, y: m.y };
+      m.vx = 0; m.vy = 0; m.orbFixed = false;
+    });
+    n.collapsed = null;
+    this.setState({ count: this.nodes.length, menuId: null });
+    this.sound.slide(240, 560, 0.3);
+    this.save();
+    this.toast('Розгорнуто ' + cnt + ' ' + plural(cnt, ['думку', 'думки', 'думок']));
+  }
+  // зміст зв'язку: тап по нитці перебирає причина / протиріччя / приклад
+  pickLink(x, y) {
+    const byId = {};
+    for (const n of this.nodes) byId[n.id] = n;
+    let best = null, bd = 16;
+    this.links.forEach(k => {
+      const s = k.split('|');
+      const a = byId[s[0]], b = byId[s[1]];
+      if (!a || !b) return;
+      const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+      if (!L2) return;
+      const t = Math.max(0.15, Math.min(0.85, ((x - a.x) * dx + (y - a.y) * dy) / L2));
+      const d = Math.hypot(x - (a.x + dx * t), y - (a.y + dy * t));
+      if (d < bd) { bd = d; best = { key: k, a, b }; }
+    });
+    return best;
+  }
+  cycleLinkKind(hit) {
+    const cur = this.linkMeta.get(hit.key) || { k: 0, from: hit.a.id };
+    const nk = (cur.k + 1) % LINK_KINDS.length;
+    this.linkMeta.set(hit.key, { k: nk, from: cur.from || hit.a.id });
+    this.linkBorn.set(hit.key, performance.now() / 1000);
+    this.sound.blip(360 + nk * 90, 0.1, 'triangle', 0.06);
+    this.buzz(10);
+    this.save();
+    this.forceUpdate();
+    this.toast("Зв'язок: " + LINK_KINDS[nk]);
+  }
+  // впорядкувати: кластери по колу, члени — навколо свого центру
+  tidy() {
+    const N = this.nodes.filter(n => !n.dying);
+    if (!N.length) return;
+    this.snapshot();
+    const done = new Set(), groups = [];
+    for (const n of N) {
+      if (done.has(n.id)) continue;
+      const comp = [...this.component(n.id)].filter(id => N.some(x => x.id === id));
+      comp.forEach(id => done.add(id));
+      groups.push(N.filter(x => comp.indexOf(x.id) >= 0));
+    }
+    groups.sort((a, b) => b.length - a.length);
+    const cx = (this.w - 120) / 2 + 20, cy = this.h / 2;
+    const ring = Math.min(this.w * 0.3, this.h * 0.3);
+    groups.forEach((g, gi) => {
+      const ga = groups.length > 1 ? (gi / groups.length) * Math.PI * 2 : 0;
+      const gx = groups.length > 1 ? cx + Math.cos(ga) * ring : cx;
+      const gy = groups.length > 1 ? cy + Math.sin(ga) * ring * 0.8 : cy;
+      g.forEach((n, i) => {
+        if (g.length === 1) { n.x = gx; n.y = gy; }
+        else {
+          const a = (i / g.length) * Math.PI * 2;
+          const rr = 30 + g.length * 9;
+          n.x = gx + Math.cos(a) * rr;
+          n.y = gy + Math.sin(a) * rr * 0.85;
+          n.orbA = a; n.orbR = rr;
+        }
+        n.home = { x: n.x, y: n.y };
+        n.vx = 0; n.vy = 0;
+      });
+    });
+    this.sound.slide(300, 520, 0.3);
+    this.save();
+    this.toast('Впорядковано: ' + groups.length + ' ' + plural(groups.length, ['кластер', 'кластери', 'кластерів']));
+  }
+  fly(dir) { this.trans = 0; this.zoomDir = dir; }
+  // углиб — лише з конкретної думки: наведеної курсором або затиснутої пальцем
+  deeper(fromId) {
+    const target = fromId || this.state.hoverId;
+    const n = target ? this.nodes.find(x => x.id === target) : null;
+    if (!n) { this.toast('Наведи на думку, щоб зайти в неї'); return; }
+    this.selectedId = null;
+    this.diveFrom = { x: n.x, y: n.y };
+    this.fly(1);
+    this.sound.slide(330, 660, 0.45);
+    this.buzz(16);
+    this.enteredAt = performance.now();
+    this.setState({ path: this.state.path.concat([n.id]), menuId: null, hoverId: null, count: this.level(n.id).length });
+    this.toast('Углиб: ' + (n.text || 'без назви').slice(0, 22));
+  }
+  shallower() {
+    if (!this.state.path.length) return;
+    const path = this.state.path.slice(0, -1);
+    this.selectedId = null; this.diveFrom = null;
+    this.fly(-1);
+    this.sound.slide(660, 330, 0.45);
+    this.setState({ path, menuId: null, hoverId: null, count: this.level(path.length ? path[path.length - 1] : null).length });
+  }
+  goScale(idx) {
+    if (idx === this.depth || idx > this.state.path.length || idx < 0) return;
+    this.fly(-1);
+    this.selectedId = null;
+    this.sound.slide(600, 320, 0.45);
+    this.setState({ path: this.state.path.slice(0, idx), menuId: null, hoverId: null, editingId: null });
+  }
+
+  tick = (t) => {
+    const dt = Math.min(2.5, (t - this.lastT) / 16.7 || 1);
+    this.lastT = t;
+    this.step(dt, t);
+    this.paint(t);
+    this.overlays();
+    if (t - this.clusterT > 600) { this.clusterT = t; this.recluster(); }
+    this.raf = requestAnimationFrame(this.tick);
+  };
+  alphaOf(n, now) {
+    if (n.dying) return 0;
+    let a = 1;
+    const days = this.props.decayDays ?? 14;
+    const age = (now - (n.touched || now)) / 86400000;
+    if (days > 0 && age > days) a *= Math.max(0.32, 1 - (age - days) / (days * 2));
+    const q = this.state.search.trim().toLowerCase();
+    if (q) a *= (n.text || '').toLowerCase().includes(q) ? 1 : 0.16;
+    if (this.state.focus && this.selectedId) a *= this.component(this.selectedId).has(n.id) ? 1 : 0.14;
+    return a;
+  }
+  step(dt, t) {
+    const mergeD = this.props.mergeDistance ?? 260;
+    const fuse = this.props.fuseRange ?? 1.5;
+    const drift = this.props.drift ?? true;
+    const gravity = this.props.gravity ?? true;
+    const micro = this.state.path.length;
+    const deg = this.degrees();
+    const now = Date.now();
+    this.trans = Math.min(1, this.trans + 0.02 * dt);
+    this.cursor.x += (this.cursor.tx - this.cursor.x) * Math.min(1, 0.3 * dt);
+    this.cursor.y += (this.cursor.ty - this.cursor.y) * Math.min(1, 0.3 * dt);
+    const gathering = this.gather || this.state.mode === 2;
+    this.cursor.r += ((gathering ? 58 : 42) - this.cursor.r) * 0.15;
+    if (this.cursor.active) {
+      this.trail.push({ x: this.cursor.x, y: this.cursor.y, a: 1 });
+      if (this.trail.length > 22) this.trail.shift();
+    }
+    this.trail.forEach(p => { p.a *= Math.pow(0.9, dt); });
+    this.ripples.forEach(r => { r.t += 0.045 * dt; });
+    this.ripples = this.ripples.filter(r => r.t < 1);
+    for (let i = this.all.length - 1; i >= 0; i--) {
+      const n = this.all[i];
+      if (n.dying) { n.alpha -= 0.09 * dt; if (n.alpha <= 0) this.all.splice(i, 1); }
+    }
+    this.sound.tune(55 * Math.pow(1.3, micro));
+    if (this.state.air === 2 && window.AirHands && window.AirHands.gaze) {
+      const g = window.AirHands.toScreen(window.AirHands.gaze.x, window.AirHands.gaze.y, this.w, this.h);
+      const n = this.nearestNode(g.x, g.y);
+      this.gazeId = n && Math.hypot(n.x - g.x, n.y - g.y) < n.r + 90 ? n.id : null;
+    } else this.gazeId = null;
+    const N = this.nodes;
+    const days = this.props.decayDays ?? 14;
+    for (const n of N) {
+      // температура думки: свіжа — яскрава й рухлива, стара — густа і темна
+      n.temp = days > 0 ? Math.min(1, Math.max(0, ((now - (n.touched || now)) / 86400000) / (days * 1.5))) : 0;
+      let target = Math.min(24 + 6.5 * (deg[n.id] || 0) + 3 * Math.min(4, this.childCount(n.id)), 66);
+      if (n.collapsed) target = Math.min(76, target + 8 + n.collapsed.length * 3);
+      if (n.cat === 5) target *= 0.72;
+      const quantum = n.text ? 0 : (0.5 + 0.5 * Math.sin(t * 0.02 + n.seed)) * 0.15;
+      const pulse = 1 + Math.sin(t * 0.0016 + n.seed) * 0.03 * (1 - 0.7 * n.temp) - quantum;
+      n.r += (target * pulse - n.r) * 0.1;
+      if (!n.dying) n.alpha += (this.alphaOf(n, now) * (1 - quantum * 1.5) - n.alpha) * 0.12;
+    }
+    const pairs = nearPairs(N, Math.max(mergeD, 200));
+    const live = new Set();
+    for (const [a, b] of pairs) {
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const d = Math.hypot(dx, dy) || 0.01;
+      const nx = dx / d, ny = dy / d;
+      const minSep = a.r + b.r + 12;
+      if (d < minSep) {
+        const f = (minSep - d) * 0.02 * dt;
+        a.vx -= nx * f; a.vy -= ny * f; b.vx += nx * f; b.vy += ny * f;
+      }
+      // теми тяготіють одна до одної не швидкістю, а самими місцями стоянки —
+      // тому думки не пливуть по полотну, а лише поволі переставляються
+      if (gravity && !a.via && !b.via && a.home && b.home) {
+        const same = a.cat === b.cat;
+        if ((same && d > minSep * 1.7) || (!same && d < 280)) {
+          const f = (same ? 0.05 : -0.07) * dt;
+          a.home.x += nx * f; a.home.y += ny * f;
+          b.home.x -= nx * f; b.home.y -= ny * f;
+        }
+      }
+      if (d < (a.r + b.r) * fuse && d > Math.abs(a.r - b.r)) {
+        const k = this.key(a.id, b.id);
+        live.add(k);
+        if (!this.membranes.has(k) && this.ripples.length < 12) {
+          this.ripples.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, t: 0, r0: (a.r + b.r) * 0.55 });
+          this.sound.blip(300 + Math.min(300, (a.r + b.r) * 2), 0.12, 'sine', 0.04);
+          this.buzz(6);
+        }
+      }
+    }
+    this.membranes = live;
+    const b = this.bounds(), hz = this.horizonAt();
+    const byId = {};
+    for (const n of N) byId[n.id] = n;
+    const amp = 3 + 9 * (drift === true ? 0.3 : drift === false ? 0 : drift);
+    for (const n of N) {
+      if (this.drag && this.drag.id === n.id) continue;
+      const par = n.via ? byId[n.via] : null;
+      let tx, ty, k;
+      if (par) {
+        // дочірня думка дрейфує біля батьківської
+        n.orbA = (n.orbA || 0) + 0.00024 * dt * (n.orbDir || 1);
+        const rr = n.orbR || (par.r + n.r + 44);
+        tx = par.x + Math.cos(n.orbA) * rr;
+        ty = par.y + Math.sin(n.orbA) * rr * 0.92;
+        k = 0.024;
+      } else {
+        // батьківська думка тримає своє місце
+        if (!n.home) n.home = { x: n.x, y: n.y };
+        n.home.x = Math.min(this.w - b.r - n.r, Math.max(b.l + n.r, n.home.x));
+        n.home.y = Math.min(this.h - b.b - n.r, Math.max(b.t + n.r, n.home.y));
+        tx = n.home.x; ty = n.home.y; k = 0.014;
+      }
+      const jit = 1 + Math.min(3, micro) * 0.5;
+      tx += Math.cos(t * 0.00055 + n.seed) * amp * jit;
+      ty += Math.sin(t * 0.00071 + n.seed * 1.7) * amp * jit;
+      if (n.cat === 5) {
+        const dx = hz.x - n.x, dy = hz.y - n.y, d = Math.hypot(dx, dy) || 1;
+        tx = n.x + dx / d * 30; ty = n.y + dy / d * 30; k = 0.05;
+        if (d < 42) { n.r *= 0.985; if (n.r < 7) { n.dying = true; this.toast('Розчинилось у горизонті'); } }
+      }
+      if (gathering && this.cursor.active) {
+        const d = Math.hypot(this.cursor.x - n.x, this.cursor.y - n.y) || 1;
+        if (d < mergeD * 1.8 && d > this.cursor.r + n.r - 12) { tx = this.cursor.x; ty = this.cursor.y; k = 0.05; }
+      }
+      tx = Math.min(this.w - b.r - n.r, Math.max(b.l + n.r, tx));
+      ty = Math.min(this.h - b.b - n.r, Math.max(b.t + n.r, ty));
+      n.vx += (tx - n.x) * k * dt;
+      n.vy += (ty - n.y) * k * dt;
+      const damp = Math.pow(0.86, dt);
+      n.vx *= damp; n.vy *= damp;
+      const sp = Math.hypot(n.vx, n.vy);
+      if (sp > 6) { n.vx = n.vx / sp * 6; n.vy = n.vy / sp * 6; }
+      n.x += n.vx * dt; n.y += n.vy * dt;
+    }
+  }
+
+  proj() {
+    const t = this.trans, e = 1 - Math.pow(1 - t, 3);
+    if (this.zoomDir > 0) {
+      const o = this.diveFrom || { x: this.w / 2, y: this.h / 2 };
+      return { s: 0.5 + 0.5 * e, cx: o.x * (1 - e) + this.w / 2 * e, cy: o.y * (1 - e) + this.h / 2 * e, pS: 1 + 1.5 * e, pA: 1 - e, e };
+    }
+    return { s: 1.9 - 0.9 * e, cx: this.w / 2, cy: this.h / 2, pS: 0.5 + 0.5 * e, pA: e, e };
+  }
+  setup(ctx, p) {
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.clearRect(0, 0, this.w, this.h);
+    ctx.globalAlpha = 0.2 + 0.8 * p.e;
+    ctx.translate(p.cx, p.cy);
+    ctx.scale(p.s, p.s);
+    ctx.translate(-this.w / 2, -this.h / 2);
+  }
+  paint(t) {
+    const c = this.ctxs || {};
+    if (!c.field) return;
+    const { bg, field, fx } = c;
+    const v = this.props.membrane ?? 0.5;
+    const fuse = this.props.fuseRange ?? 1.5;
+    const mergeD = this.props.mergeDistance ?? 260;
+    const p = this.proj();
+    const bond = (ctx, a, b, mul) => {
+      const m = mul || fuse;
+      const fv = fuseV(a, b, v, m);
+      if (fv < 0.015) return;
+      const mb = metaballPath(a, b, fv, 2.4, (a.r + b.r) * m);
+      if (mb) drawMeta(ctx, mb);
+    };
+    // тло: батьківський рівень у глибині
+    this.setup(bg, p);
+    const path = this.state.path;
+    const pnodes = path.length ? this.level(path.length > 1 ? path[path.length - 2] : null) : [];
+    if (pnodes.length) {
+      bg.save();
+      try { bg.filter = 'blur(28px)'; } catch (e) {}
+      // слід шляху: сама думка, в яку ми зайшли, оточує рівень зсередини
+      const entered = this.all.find(x => x.id === path[path.length - 1]);
+      if (entered) {
+        bg.globalAlpha *= 0.16;
+        bg.fillStyle = CATS[entered.cat];
+        bg.beginPath();
+        bg.arc(this.w / 2, this.h / 2, Math.min(this.w, this.h) * 0.44, 0, Math.PI * 2);
+        bg.fill();
+        bg.globalAlpha /= 0.16;
+      }
+      bg.globalAlpha *= 0.26 * p.pA;
+      bg.fillStyle = '#435434';
+      bg.beginPath();
+      for (const n of pnodes) circle(bg, n, n.r * 1.1);
+      for (const [a, b] of nearPairs(pnodes, mergeD)) bond(bg, a, b);
+      bg.fill('nonzero');
+      bg.restore();
+    }
+    this.setup(field, p);
+    const view = this.viewNodes();
+    if (view.length) {
+      const groups = new Map();
+      for (const n of view) {
+        const a = Math.min(1, Math.max(0, n.alpha === undefined ? 1 : n.alpha));
+        n._bk = Math.max(1, Math.round(a * 4));
+        n._tb = Math.round((n.temp || 0) * 3);
+        const k = n.cat + '|' + n._bk + '|' + n._tb;
+        let g = groups.get(k); if (!g) { g = []; groups.set(k, g); } g.push(n);
+      }
+      const pairs = nearPairs(view.filter(n => !n.dying), Math.max(mergeD, 240));
+      field.beginPath();
+      let any = false;
+      for (const [a, b] of pairs) {
+        if (a.cat === b.cat || a._bk < 4 || b._bk < 4) continue;
+        bond(field, a, b); any = true;
+      }
+      if (any) { field.fillStyle = CATS[0]; field.fill('nonzero'); }
+      groups.forEach((grp, k) => {
+        const parts = k.split('|');
+        const cat = +parts[0], bk = +parts[1], tb = +parts[2];
+        field.beginPath();
+        for (const n of grp) circle(field, n, n.r);
+        for (const [a, b] of pairs) {
+          if (a.cat !== cat || b.cat !== cat || a._bk !== bk || b._tb !== tb || a._tb !== tb || b._bk !== bk) continue;
+          bond(field, a, b);
+        }
+        field.fillStyle = towardBg(CATS[cat], Math.min(0.82, (1 - bk / 4) + (tb / 3) * 0.42));
+        field.fill('nonzero');
+      });
+      const cur = this.cursor.active ? this.cursor : null;
+      const glow = (src, targets, radius, strength) => {
+        field.beginPath();
+        circle(field, src, src.r);
+        for (const n of targets) {
+          if (n === src) continue;
+          circle(field, n, n.r);
+          bond(field, src, n);
+        }
+        const g = field.createRadialGradient(src.x, src.y, src.r * 0.5, src.x, src.y, radius);
+        g.addColorStop(0, 'rgba(100,254,19,' + strength + ')');
+        g.addColorStop(0.3, 'rgba(100,254,19,' + strength * 0.85 + ')');
+        g.addColorStop(1, 'rgba(100,254,19,0)');
+        field.fillStyle = g;
+        field.fill('nonzero');
+      };
+      if (cur) glow(cur, view.filter(n => Math.hypot(n.x - cur.x, n.y - cur.y) < (n.r + cur.r) * fuse), mergeD * 0.8, 1);
+      // вибір і ціль зв'язку — лише сама крапля, суцільним кольором: акцент
+      // не заливає весь кластер і не з'їдає теми сусідів
+      const selId = this.state.editingId || this.selectedId;
+      const hotId = this.linkFrom ? (this.pick(this.cursor.tx, this.cursor.ty) || {}).id : null;
+      if (hotId && hotId !== selId) {
+        const s = view.find(n => n.id === hotId);
+        if (s) {
+          field.beginPath(); circle(field, s, s.r);
+          field.fillStyle = '#3aa606';
+          field.fill();
+        }
+      }
+      if (selId) {
+        const s = view.find(n => n.id === selId);
+        if (s) {
+          field.beginPath(); circle(field, s, s.r);
+          field.fillStyle = '#64fe13';
+          field.fill();
+        }
+      }
+    }
+    // ефекти: потік частинок, брижі, шлейф, орбіти, горизонт
+    this.setup(fx, p);
+    const orbList = this.nodes;
+    fx.save();
+    fx.globalCompositeOperation = 'lighter';
+    for (const n of orbList) {
+      const kids = this.childCount(n.id);
+      if (!kids) continue;
+      const shown = Math.min(kids, 6);
+      for (let q = 0; q < shown; q++) {
+        const rr = n.r + 15 + (q % 3) * 8;
+        const ang = (q / shown) * Math.PI * 2 + t * 0.0004 * (0.6 + (q % 3) * 0.2);
+        const x = n.x + Math.cos(ang) * rr, y = n.y + Math.sin(ang) * rr * 0.45;
+        fx.fillStyle = 'rgba(168,189,151,0.5)';
+        fx.beginPath(); fx.arc(x, y, 1.9, 0, Math.PI * 2); fx.fill();
+      }
+    }
+    fx.restore();
+    // потік частинок по зв'язках
+    const byId = {};
+    for (const n of this.nodes) byId[n.id] = n;
+    {
+      const tSec = t * 0.001;
+      fx.save();
+      fx.globalCompositeOperation = 'lighter';
+      this.links.forEach(k => {
+        const s = k.split('|');
+        const a = byId[s[0]], b = byId[s[1]];
+        if (!a || !b || a.dying || b.dying) return;
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        if (len < (a.r + b.r) * fuse) return;
+        const born = this.linkBorn.get(k) || -9;
+        const age = tSec - born;
+        const meta = this.linkMeta.get(k) || { k: 0, from: '' };
+        const kind = meta.k || 0;
+        const tone = LINK_TONE[kind];
+        const src = meta.from === b.id ? b : a, dst = meta.from === b.id ? a : b;
+        // мʼяка пульсація на зв'язок: своя фаза, щоб лінії дихали не в унісон
+        const phase = (a.seed + b.seed) * 1.7;
+        const pulse = 0.5 + 0.5 * Math.sin(t * 0.0021 + phase);
+        fx.strokeStyle = kind === 2
+          ? 'rgba(217,154,154,' + (0.1 + 0.12 * pulse) + ')'
+          : 'rgba(168,189,151,' + (0.09 + 0.11 * pulse) + ')';
+        fx.lineWidth = 1 + 0.5 * pulse;
+        fx.beginPath(); fx.moveTo(a.x, a.y); fx.lineTo(b.x, b.y); fx.stroke();
+        const cnt = Math.max(8, Math.min(44, Math.round(len / 13)));
+        for (let q = 0; q < cnt; q++) {
+          if (kind === 3 && q % 3) continue;
+          const back = kind === 2 && q % 2 === 1;
+          let ph = (tSec * (kind === 2 ? 0.13 : 0.1) + q / cnt) % 1;
+          if (back) ph = 1 - ph;
+          const x = src.x + (dst.x - src.x) * ph, y = src.y + (dst.y - src.y) * ph;
+          const fade = Math.min(1, ph / 0.12) * Math.min(1, (1 - ph) / 0.12);
+          let hot = 0;
+          if (age > 0 && age < 1.3) hot = Math.exp(-Math.pow((ph - age / 1.3) * 5, 2)) * (1 - age / 1.3);
+          const rr = (kind === 3 ? 1.6 : 1.1) + 0.7 * pulse + hot * 3.2;
+          fx.fillStyle = 'rgba(' + tone + ',' + ((0.2 + 0.26 * pulse) * fade + hot) + ')';
+          fx.beginPath(); fx.arc(x, y, rr, 0, Math.PI * 2); fx.fill();
+        }
+        // причина → наслідок: два маленькі шеврони вздовж нитки
+        if (kind === 1) {
+          const ang = Math.atan2(dst.y - src.y, dst.x - src.x);
+          fx.fillStyle = 'rgba(100,254,19,' + (0.4 + 0.3 * pulse) + ')';
+          for (const at of [0.42, 0.78]) {
+            const cx = src.x + (dst.x - src.x) * at, cy = src.y + (dst.y - src.y) * at;
+            fx.beginPath();
+            fx.moveTo(cx + Math.cos(ang) * 6, cy + Math.sin(ang) * 6);
+            fx.lineTo(cx + Math.cos(ang + 2.5) * 5, cy + Math.sin(ang + 2.5) * 5);
+            fx.lineTo(cx + Math.cos(ang - 2.5) * 5, cy + Math.sin(ang - 2.5) * 5);
+            fx.closePath();
+            fx.fill();
+          }
+        }
+      });
+      fx.restore();
+    }
+    for (const r of this.ripples) {
+      fx.strokeStyle = 'rgba(168,189,151,' + (0.3 * (1 - r.t)) + ')';
+      fx.lineWidth = 1.2;
+      fx.beginPath(); fx.arc(r.x, r.y, r.r0 + r.t * 66, 0, Math.PI * 2); fx.stroke();
+    }
+    {
+      fx.save();
+      fx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < this.trail.length; i++) {
+        const q = this.trail[i];
+        if (q.a < 0.03) continue;
+        const rr = 6 + 14 * (i / this.trail.length);
+        const g = fx.createRadialGradient(q.x, q.y, 0, q.x, q.y, rr);
+        g.addColorStop(0, 'rgba(100,254,19,' + (0.09 * q.a) + ')');
+        g.addColorStop(1, 'rgba(100,254,19,0)');
+        fx.fillStyle = g;
+        fx.beginPath(); fx.arc(q.x, q.y, rr, 0, Math.PI * 2); fx.fill();
+      }
+      fx.restore();
+      if (this.linkFrom) {
+        const from = this.nodes.find(n => n.id === this.linkFrom);
+        if (from) {
+          fx.strokeStyle = 'rgba(100,254,19,0.7)';
+          fx.lineWidth = 1.5;
+          fx.setLineDash([5, 6]);
+          fx.beginPath(); fx.moveTo(from.x, from.y); fx.lineTo(this.cursor.tx, this.cursor.ty); fx.stroke();
+          fx.setLineDash([]);
+        }
+      }
+      // горизонт подій
+      if (this.nodes.some(n => n.cat === 5 && !n.dying)) {
+        const hz = this.horizonAt();
+        fx.strokeStyle = 'rgba(217,154,154,0.4)';
+        fx.lineWidth = 1;
+        fx.setLineDash([3, 7]);
+        fx.beginPath(); fx.arc(hz.x, hz.y, 46, 0, Math.PI * 2); fx.stroke();
+        fx.setLineDash([]);
+        fx.fillStyle = 'rgba(8,11,5,0.75)';
+        fx.beginPath(); fx.arc(hz.x, hz.y, 44, 0, Math.PI * 2); fx.fill();
+      }
+      // крапки піддумок на кулі
+      // слід шляху: місце, крізь яке ми провалилися в цей рівень, ще мить світиться
+      const since = this.enteredAt ? performance.now() - this.enteredAt : 1e9;
+      if (this.state.path.length && since < 1900) {
+        const e = since / 1900;
+        fx.strokeStyle = 'rgba(100,254,19,' + (0.5 * (1 - e)) + ')';
+        fx.lineWidth = 1.4;
+        fx.beginPath(); fx.arc(this.w / 2, this.h / 2, 18 + e * 130, 0, Math.PI * 2); fx.stroke();
+        fx.beginPath(); fx.arc(this.w / 2, this.h / 2, 6 + e * 40, 0, Math.PI * 2); fx.stroke();
+      }
+      // згорнутий кластер: пунктирне кільце всередині краплі
+      for (const n of this.nodes) {
+        if (!n.collapsed) continue;
+        fx.strokeStyle = 'rgba(15,43,0,0.5)';
+        fx.lineWidth = 1.5;
+        fx.setLineDash([4, 5]);
+        fx.beginPath(); fx.arc(n.x, n.y, Math.max(6, n.r - 9), 0, Math.PI * 2); fx.stroke();
+        fx.setLineDash([]);
+      }
+      for (const n of this.nodes) {
+        const kids = this.childCount(n.id);
+        if (!kids) continue;
+        fx.fillStyle = 'rgba(15,43,0,0.5)';
+        const shown = Math.min(5, kids);
+        for (let i = 0; i < shown; i++) {
+          const a = -Math.PI / 2 + (i - (shown - 1) / 2) * 0.3;
+          fx.beginPath();
+          fx.arc(n.x + Math.cos(a) * (n.r - 9), n.y + Math.sin(a) * (n.r - 9), 2.1, 0, Math.PI * 2);
+          fx.fill();
+        }
+      }
+    }
+  }
+
+  recluster() {
+    const roots = this.level(null).filter(n => !n.dying);
+    const seen = new Set(), comps = [];
+    for (const n of roots) {
+      if (seen.has(n.id)) continue;
+      const comp = [...this.component(n.id)].filter(id => roots.some(x => x.id === id));
+      comp.forEach(id => seen.add(id));
+      comps.push(comp);
+    }
+    this.clusterCache = comps;
+    this.rehome();
+    if (!(this.props.clusters ?? true)) {
+      if (this.state.clusters.length) this.setState({ clusters: [] });
+      return;
+    }
+    const N = this.nodes.filter(n => !n.dying);
+    const deg = this.degrees();
+    const p = this.proj();
+    const done = new Set(), out = [];
+    for (const n of N) {
+      if (done.has(n.id)) continue;
+      const comp = [...this.component(n.id)].filter(id => N.some(x => x.id === id));
+      comp.forEach(id => done.add(id));
+      if (comp.length < 2) continue;
+      const members = N.filter(x => comp.indexOf(x.id) >= 0);
+      const cx = members.reduce((s, x) => s + x.x, 0) / members.length;
+      const minY = Math.min.apply(null, members.map(x => x.y - x.r));
+      const top = members.slice().sort((a, b) => (deg[b.id] || 0) - (deg[a.id] || 0))[0];
+      out.push({
+        label: (top.text || 'кластер').slice(0, 20) + ' · ' + members.length,
+        x: Math.min(this.w - 150, Math.max(70, Math.round(p.cx + (cx - this.w / 2) * p.s))),
+        y: Math.max(this.bounds().t - 30, Math.round(p.cy + (minY - 30 - this.h / 2) * p.s))
+      });
+    }
+    this.setState({ clusters: out });
+  }
+  overlays() {
+    const c = this.fxRef.current;
+    this.drawAir();
+    if (c) c.style.cursor = this.drag ? 'grabbing' : (this.state.hoverId ? 'grab' : 'default');
+    const p = this.proj();
+    const find = (id) => this.viewNodes().find(n => n.id === id) || this.all.find(n => n.id === id);
+    const put = (ref, id, dy) => {
+      if (!ref.current) return;
+      const n = find(id);
+      if (!n) return;
+      const x = p.cx + (n.x - this.w / 2) * p.s, y = p.cy + (n.y - this.h / 2) * p.s;
+      ref.current.style.transform = 'translate(' + x + 'px,' + (y + dy(n) * p.s) + 'px)';
+    };
+    if (this.state.hoverId) put(this.hoverRef, this.state.hoverId, n => n.r + 14);
+    if (this.state.editingId) put(this.editRef, this.state.editingId, n => n.r + 18);
+    // радіальне меню тримаємо в межах екрана, щоб пігулки не виїжджали за край
+    if (this.state.menuId && this.menuRef.current) {
+      const n = find(this.state.menuId);
+      if (n) {
+        const bd = this.bounds();
+        const x = Math.min(this.w - 116, Math.max(116, p.cx + (n.x - this.w / 2) * p.s));
+        const y = Math.min(this.h - bd.b - 40, Math.max(bd.t + 56, p.cy + (n.y - this.h / 2) * p.s));
+        this.menuRef.current.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+      }
+    }
+  }
+
+  pos(e) {
+    const r = this.fxRef.current.getBoundingClientRect();
+    const p = this.proj();
+    return { x: this.w / 2 + (e.clientX - r.left - p.cx) / p.s, y: this.h / 2 + (e.clientY - r.top - p.cy) / p.s };
+  }
+  pick(x, y) {
+    const N = this.viewNodes();
+    for (let i = N.length - 1; i >= 0; i--) {
+      const n = N[i];
+      if (!n.dying && Math.hypot(x - n.x, y - n.y) < n.r + 10) return n;
+    }
+    return null;
+  }
+
+  toggleSoundOn() {
+    const on = !this.state.soundOn;
+    this.sound.on = on;
+    if (on) { this.sound.ensure(); if (this.sound.ctx && this.sound.ctx.state === 'suspended') this.sound.ctx.resume(); this.sound.startAmbient(); }
+    else this.sound.stopAmbient();
+    this.setState({ soundOn: on });
+  }
+
+  renderVals() {
+    const st = this.state;
+    const count = this.nodes.filter(n => !n.dying).length;
+    const words = ['думка', 'думки', 'думок'];
+    const view = this.viewNodes();
+    const hn = st.hoverId ? view.find(n => n.id === st.hoverId) : null;
+    const deg = this.degrees();
+    let hoverMeta = '';
+    if (hn) {
+      {
+        const bits = [];
+        const d = deg[hn.id] || 0, k = this.childCount(hn.id);
+        if (d) bits.push(d + ' ' + plural(d, ["зв'язок", "зв'язки", "зв'язків"]));
+        if (k) bits.push(k + ' ' + plural(k, ['піддумка', 'піддумки', 'піддумок']));
+        if (hn.collapsed) bits.push('згорнуто ' + hn.collapsed.length);
+        bits.push(CAT_NAMES[hn.cat]);
+        hoverMeta = bits.join(' · ');
+      }
+    }
+    const crumbs = [{ label: 'Корінь' }].concat(st.path.map(id => {
+      const n = this.all.find(x => x.id === id);
+      return { label: n ? (n.text || 'думка').slice(0, 16) : 'думка' };
+    }));
+    const menuNode = st.menuId ? this.all.find(n => n.id === st.menuId) : null;
+    const R = menuNode ? Math.max(104, menuNode.r + 76) : 104;
+    const acts = menuNode ? [
+      { label: 'Текст', run: () => this.startEdit(menuNode) },
+      { label: "Зв'язок", run: () => { this.linkFrom = menuNode.id; this.setState({ menuId: null, mode: 1 }); } },
+      { label: 'Поділ', run: () => this.create({ x: menuNode.x, y: menuNode.y }, true, menuNode.id) },
+      { label: 'Углиб', run: () => this.deeper(menuNode.id) },
+      { label: 'Тема', run: () => this.cycleCat(menuNode.id) },
+      menuNode.collapsed
+        ? { label: 'Розгорнути', run: () => this.expand(menuNode.id) }
+        : { label: 'Згорнути', run: () => this.collapse(menuNode.id) },
+      { label: 'Видалити', run: () => this.remove(menuNode.id) }
+    ] : [];
+    // крок по дузі виводимо з ширини самих підписів — пігулки не перекриваються
+    const widths = acts.map(a => a.label.length * 7.2 + 32);
+    const steps = [];
+    let spread = 0;
+    for (let i = 0; i < acts.length - 1; i++) {
+      const d = (widths[i] / 2 + widths[i + 1] / 2 + 14) / R;
+      steps.push(d); spread += d;
+    }
+    let ang = -Math.PI / 2 - spread / 2;
+    const menuItems = acts.map((a, i) => {
+      if (i > 0) ang += steps[i - 1];
+      return { label: a.label, left: Math.round(Math.cos(ang) * R) + 'px', top: Math.round(Math.sin(ang) * R) + 'px', onClick: (e) => { e.stopPropagation(); a.run(); } };
+    });
+    const touch = st.mobile || (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    const depth = this.depth;
+    // масштаб = полотно + рівні, що з'явилися по мірі заглиблення
+    const scaleLabel = (i) => i === 0 ? 'Полотно' : ((this.all.find(x => x.id === st.path[i - 1]) || {}).text || 'думка').slice(0, 14);
+    const range = [];
+    for (let i = 0; i <= st.path.length; i++) range.push(i);
+    return {
+      bgRef: this.bgRef, fieldRef: this.fieldRef, fxRef: this.fxRef, grainRef: this.grainRef,
+      hoverRef: this.hoverRef, editRef: this.editRef, menuRef: this.menuRef,
+      countLabel: count + ' ' + plural(count, words),
+      isEmpty: count === 0,
+      emptyTitle: st.path.length ? 'Порожня думка' : 'Ще немає думок',
+      emptyBody: touch
+        ? 'Довге натискання по полю — нова думка. Довгий тап по думці — углиб, звести пальці — назад.'
+        : 'Подвійний клік по полю — нова думка. Наведи на думку і крути скрол униз — углиб.',
+      hoverVisible: !!hn && !st.editingId && !st.menuId,
+      hoverText: hn ? (hn.text || 'без назви') : '',
+      hoverMeta,
+      editing: !!st.editingId, editValue: st.editValue,
+      menuOpen: !!menuNode, menuItems,
+      crumbItems: crumbs, crumbIndex: st.path.length,
+      modeItems: [{ label: 'Рух' }, { label: "Зв'язок" }, { label: 'Збір' }],
+      modeIndex: st.mode,
+      modeChips: ['Рух', "Зв'язок", 'Збір'].map((label, i) => ({
+        label,
+        bg: st.mode === i ? '#64fe13' : 'transparent',
+        fg: st.mode === i ? '#0f2b00' : '#dfeed4',
+        border: st.mode === i ? '#64fe13' : '#2f3d25',
+        onClick: () => { this.linkFrom = null; this.setState({ mode: i, menuId: null }); }
+      })),
+      clusterLabels: st.clusters.map((c, i) => ({ label: c.label, tf: 'translate(' + c.x + 'px,' + c.y + 'px)', key: i })),
+      mobile: st.mobile,
+      desktopFlex: st.mobile ? 'none' : 'flex',
+      desktopFlexCol: st.mobile ? 'none' : 'flex',
+      sheet: st.sheet,
+      sheetVariant: st.sheet ? 'outline' : 'invisible',
+      levelName: scaleLabel(depth),
+      subLabel: count + ' ' + plural(count, words) + (st.path.length ? ' · ' + (crumbs[crumbs.length - 1].label) : ''),
+      toggleSheet: () => this.setState({ sheet: !st.sheet }),
+      scaleItems: range.map(i => ({
+        label: scaleLabel(i),
+        bg: i === depth ? '#64fe13' : 'transparent',
+        fg: i === depth ? '#0f2b00' : '#dfeed4',
+        border: i === depth ? '#64fe13' : '#2f3d25',
+        onClick: () => this.goScale(i)
+      })),
+      rulerItems: range.map(i => ({
+        label: scaleLabel(i),
+        color: i === depth ? '#64fe13' : '#7b9169',
+        tick: i === depth ? '22px' : (Math.abs(i - depth) === 1 ? '14px' : '9px'),
+        onClick: () => this.goScale(i)
+      })),
+      search: st.search, searchOpen: st.searchOpen,
+      soundLabel: st.soundOn ? 'Звук: увімк.' : 'Звук: вимк.',
+      videoOpacity: st.air === 2 ? 1 : 0,
+      airVariant: st.air === 2 ? 'primary' : 'default',
+      airLabel: st.air === 1 ? 'Air…' : st.air === 2 ? 'Air увімк.' : 'Air',
+      airStrip: st.air === 1 ? 'Піднімаю камеру й моделі…'
+        : st.air === 2 ? (st.editingId ? (st.editValue || 'Говори — думка наповнюється') : 'палець — курсор · щіпка — взяти · дві руки розвести — углиб')
+        : '',
+      toggleAir: () => this.toggleAir(),
+      focusVariant: st.focus ? 'outline' : 'invisible',
+      addLabel: this.selectedId ? 'Поділ' : 'Нова думка',
+      toast: st.toast,
+      hint: touch
+        ? 'довгий тап по думці — углиб · звести пальці — назад · довге натискання по полю — нова'
+        : "наведи на думку + скрол униз — углиб · скрол вгору — назад · клік — меню · N нова · Tab вибір",
+      goToLevel: (i) => {
+        if (i >= st.path.length) return;
+        this.fly(-1);
+        this.selectedId = null;
+        this.sound.slide(660, 330, 0.4);
+        this.setState({ path: st.path.slice(0, i), menuId: null, hoverId: null });
+      },
+      setMode: (i) => { this.linkFrom = null; this.setState({ mode: i, menuId: null }); },
+      addThought: () => this.newThought(),
+      tidy: () => this.tidy(),
+      toggleFocus: () => this.setState({ focus: !st.focus }),
+      toggleSearch: () => this.setState({ searchOpen: !st.searchOpen, search: st.searchOpen ? '' : st.search }),
+      onSearch: (e) => this.setState({ search: e.target.value }),
+      toggleSound: () => this.toggleSoundOn(),
+      undo: this.undo,
+      exportPng: () => {
+        const off = document.createElement('canvas');
+        off.width = this.w * this.dpr; off.height = this.h * this.dpr;
+        const o = off.getContext('2d');
+        o.fillStyle = '#0d1209'; o.fillRect(0, 0, off.width, off.height);
+        o.drawImage(this.bgRef.current, 0, 0);
+        o.drawImage(this.fieldRef.current, 0, 0);
+        o.drawImage(this.fxRef.current, 0, 0);
+        const a = document.createElement('a');
+        a.download = 'kanvas-myslennya.png';
+        a.href = off.toDataURL('image/png');
+        a.click();
+        this.toast('PNG збережено');
+      },
+      exportText: () => {
+        const lines = [];
+        const walk = (pid, d) => {
+          for (const n of this.level(pid)) {
+            const linked = this.all.filter(x => this.links.has(this.key(n.id, x.id))).map(x => x.text || '—');
+            lines.push('  '.repeat(d) + '- ' + (n.text || 'без назви') + (linked.length ? '  ↔ ' + linked.join(', ') : ''));
+            walk(n.id, d + 1);
+          }
+        };
+        walk(null, 0);
+        const blob = new Blob(['# Канвас мислення\n\n' + lines.join('\n') + '\n'], { type: 'text/markdown' });
+        const a = document.createElement('a');
+        a.download = 'kanvas-myslennya.md';
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        this.toast('Структуру збережено');
+      },
+      onContextMenu: (e) => {
+        e.preventDefault();
+        const p = this.pos(e);
+        const n = this.pick(p.x, p.y);
+        if (n) { this.selectedId = n.id; this.setState({ menuId: n.id }); }
+      },
+      onPointerDown: (e) => {
+        const p = this.pos(e);
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        this.cursor.tx = p.x; this.cursor.ty = p.y;
+        if (!this.cursor.active) { this.cursor.x = p.x; this.cursor.y = p.y; this.cursor.active = true; }
+        if (this.pointers.size === 2) {
+          const v2 = [...this.pointers.values()];
+          this.pinch = { d0: Math.hypot(v2[0].x - v2[1].x, v2[0].y - v2[1].y), fired: false, cx: (v2[0].x + v2[1].x) / 2, cy: (v2[0].y + v2[1].y) / 2 };
+          this.drag = null; this.press = null; this.linkFrom = null;
+          clearTimeout(this.pressT);
+          return;
+        }
+        if (st.soundOn) this.sound.ensure();
+        const n = this.pick(p.x, p.y);
+        this.press = { x: p.x, y: p.y, t: Date.now(), id: n ? n.id : null, moved: false };
+        if (st.menuId && (!n || n.id !== st.menuId)) this.setState({ menuId: null });
+        if (n) {
+          if (e.altKey || st.mode === 1) this.linkFrom = n.id;
+          else this.drag = { id: n.id, ox: p.x - n.x, oy: p.y - n.y, lx: p.x, ly: p.y };
+          n.touched = Date.now();
+        }
+        clearTimeout(this.pressT);
+        // довге натискання: по думці — углиб (лише на тачі, щоб не ламати перетяг мишею),
+        // по полю — нова думка
+        const coarse = e.pointerType !== 'mouse' || st.mobile;
+        this.pressT = setTimeout(() => {
+          if (!this.press || this.press.moved) return;
+          if (this.press.id) {
+            if (!coarse) return;
+            const id = this.press.id;
+            this.press = null; this.drag = null; this.linkFrom = null;
+            this.buzz(22);
+            this.deeper(id);
+          } else { this.create({ x: this.press.x, y: this.press.y }, true); this.press = null; }
+        }, 460);
+      },
+      onPointerMove: (e) => {
+        if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (this.pinch && this.pointers.size >= 2) {
+          const v2 = [...this.pointers.values()];
+          const ratio = Math.hypot(v2[0].x - v2[1].x, v2[0].y - v2[1].y) / Math.max(1, this.pinch.d0);
+          // звести пальці — на рівень назад
+          if (!this.pinch.fired && this.trans > 0.85 && ratio < 0.72) {
+            this.pinch.fired = true;
+            this.buzz(18);
+            this.shallower();
+          }
+          return;
+        }
+        const p = this.pos(e);
+        this.cursor.tx = p.x; this.cursor.ty = p.y;
+        if (!this.cursor.active) { this.cursor.x = p.x; this.cursor.y = p.y; this.cursor.active = true; }
+        if (this.press && Math.hypot(p.x - this.press.x, p.y - this.press.y) > 10) this.press.moved = true;
+        if (this.drag) {
+          const n = this.all.find(n => n.id === this.drag.id);
+          if (n) {
+            n.x = p.x - this.drag.ox; n.y = p.y - this.drag.oy;
+            n.vx = (p.x - this.drag.lx) * 0.4; n.vy = (p.y - this.drag.ly) * 0.4;
+            this.drag.lx = p.x; this.drag.ly = p.y;
+            this.save();
+          }
+        } else if (!this.linkFrom && !st.editingId) {
+          const h = this.pick(p.x, p.y);
+          const id = h ? h.id : null;
+          if (id !== st.hoverId) this.setState({ hoverId: id });
+        }
+      },
+      onPointerUp: (e) => {
+        clearTimeout(this.pressT);
+        this.pointers.delete(e.pointerId);
+        if (this.pinch) { if (this.pointers.size < 2) this.pinch = null; return; }
+        const p = this.pos(e);
+        const pr = this.press;
+        this.press = null;
+        if (this.linkFrom) {
+          const t = this.pick(p.x, p.y);
+          if (t && t.id !== this.linkFrom) { this.toggleLink(this.linkFrom, t.id); this.linkFrom = null; return; }
+          // у режимі «Зв'язок» перший тап лише запам'ятовує думку — другий з'єднує
+          if (st.mode === 1 && t && t.id === this.linkFrom && pr && !pr.moved) { this.toast('Тапни другу думку'); return; }
+          this.linkFrom = null;
+          return;
+        }
+        if (this.drag) {
+          const n = this.all.find(n => n.id === this.drag.id);
+          const off = n && (n.x < 6 || n.y < 6 || n.x > this.w - 6 || n.y > this.h - 6);
+          this.drag = null;
+          if (off) { this.remove(n.id); return; }
+          // місце, куди відпустили, стає новим домом (або новою орбітою біля батька)
+          if (n) {
+            const par = n.via ? this.all.find(x => x.id === n.via) : null;
+            if (par) {
+              n.orbA = Math.atan2(n.y - par.y, n.x - par.x);
+              n.orbR = Math.max(par.r + n.r + 18, Math.hypot(n.x - par.x, n.y - par.y));
+              n.orbFixed = true;
+            } else n.home = { x: n.x, y: n.y };
+            n.vx = 0; n.vy = 0;
+            this.save();
+          }
+        }
+        if (!pr || pr.moved) return;
+        if (!pr.id) {
+          const hit = this.pickLink(p.x, p.y);
+          if (hit) { this.cycleLinkKind(hit); return; }
+        }
+        const now = Date.now();
+        const dbl = now - this.lastTap < 320 && this.lastTapId === pr.id;
+        this.lastTap = now; this.lastTapId = pr.id;
+        if (dbl) {
+          if (pr.id) this.deeper(pr.id);
+          else this.create({ x: p.x, y: p.y }, true);
+          return;
+        }
+        if (pr.id) { this.selectedId = pr.id; this.setState({ menuId: pr.id, hoverId: null }); }
+        else { this.selectedId = null; this.setState({ menuId: null }); }
+      },
+      onPointerLeave: () => {
+        this.cursor.active = false;
+        this.pointers.clear();
+        this.pinch = null;
+        if (st.hoverId) this.setState({ hoverId: null });
+      },
+      onEditChange: (e) => this.setState({ editValue: e.target.value }),
+      onEditKeyDown: (e) => {
+        if (e.key === 'Enter') e.target.blur();
+        if (e.key === 'Escape') { const id = st.editingId; const n = this.all.find(n => n.id === id); if (n && !n.text) this.remove(id); this.setState({ editingId: null, editValue: '' }); }
+      },
+      onEditBlur: () => this.commitEdit()
+    };
+  }
+}
+</script>
+</body>
+</html>
