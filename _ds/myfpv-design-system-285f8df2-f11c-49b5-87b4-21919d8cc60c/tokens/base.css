@@ -1,0 +1,10 @@
+/* Document defaults + link colors. Kept deliberately small: the source
+   file is a component library, not a page system. */
+.ds-root,body{background:var(--bgcolor-default);color:var(--fgcolor-default);font-family:var(--ds-font-sans);font-size:var(--ds-text-body-medium-size);line-height:var(--ds-text-body-medium-lineheight);-webkit-font-smoothing:antialiased}
+a{color:var(--fgcolor-link);text-decoration:none}
+a:hover{text-decoration:underline}
+a:active{color:var(--fgcolor-link)}
+a:focus-visible,.ds-focus:focus-visible{outline:var(--ds-focus-outline);outline-offset:var(--ds-focus-outline-offset);border-radius:var(--ds-radius-medium)}
+*,*::before,*::after{box-sizing:border-box}
+code,kbd,samp,pre{font-family:var(--ds-font-mono)}
+::selection{background:var(--selection-bgcolor)}

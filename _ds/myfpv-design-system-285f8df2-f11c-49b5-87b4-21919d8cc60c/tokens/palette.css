@@ -1,0 +1,65 @@
+/* myFPV palette — raw ramps. Semantic roles are assigned in color.css.
+   Accent #64FE13. Neutrals are a green-tinted charcoal: hue held near 105 at very
+   low chroma, so every surface carries a trace of the accent instead of reading
+   as a neutral grey. */
+:root{
+/* accent */
+--myfpv-0:#f1ffe2; /* @kind color */
+--myfpv-1:#dcffbb; /* @kind color */
+--myfpv-2:#bfff85; /* @kind color */
+--myfpv-3:#9cff4d; /* @kind color */
+--myfpv-4:#64fe13; /* @kind color */
+--myfpv-5:#4ed60a; /* @kind color */
+--myfpv-6:#3aa606; /* @kind color */
+--myfpv-7:#2f7d00; /* @kind color */
+--myfpv-8:#1f5400; /* @kind color */
+--myfpv-9:#0f2b00; /* @kind color */
+
+/* green-tinted charcoal, dark end */
+--n-0:#080b05; /* @kind color */
+--n-1:#0d1209; /* @kind color */
+--n-2:#131a0e; /* @kind color */
+--n-3:#1a2314; /* @kind color */
+--n-4:#232e1b; /* @kind color */
+--n-5:#2f3d25; /* @kind color */
+--n-6:#435434; /* @kind color */
+--n-7:#7b9169; /* @kind color */
+--n-8:#a8bd97; /* @kind color */
+--n-9:#dfeed4; /* @kind color */
+--n-10:#f4fbee; /* @kind color */
+
+/* green-tinted off-white, light end */
+--l-0:#fbfef8; /* @kind color */
+--l-1:#f4faee; /* @kind color */
+--l-2:#eaf4e2; /* @kind color */
+--l-3:#dcead2; /* @kind color */
+--l-4:#c3d5b6; /* @kind color */
+--l-5:#97ab88; /* @kind color */
+--l-6:#5f7350; /* @kind color */
+--l-7:#2f3d25; /* @kind color */
+--l-8:#131a0e; /* @kind color */
+
+/* statuses, deliberately desaturated so the accent is the only loud colour */
+--st-danger-fg:#d99a9a; /* @kind color */
+--st-danger-emphasis:#7a3636; /* @kind color */
+--st-attention-fg:#d3c48c; /* @kind color */
+--st-attention-emphasis:#6e6030; /* @kind color */
+--st-severe-fg:#d3ab8c; /* @kind color */
+--st-severe-emphasis:#6e4a30; /* @kind color */
+--st-done-fg:#b2a6c8; /* @kind color */
+--st-done-emphasis:#524670; /* @kind color */
+--st-sponsors-fg:#c8a0b8; /* @kind color */
+--st-sponsors-emphasis:#6e4a60; /* @kind color */
+--st-upsell-fg:#a6b0c8; /* @kind color */
+--st-upsell-emphasis:#46506e; /* @kind color */
+--st-danger-fg-light:#8f3f3f; /* @kind color */
+--st-attention-fg-light:#6b5a1f; /* @kind color */
+--st-severe-fg-light:#7d4a22; /* @kind color */
+--st-done-fg-light:#5a4d7d; /* @kind color */
+--st-sponsors-fg-light:#7d4a6b; /* @kind color */
+--st-upsell-fg-light:#4a5680; /* @kind color */
+
+/* accent glow — the one non-flat effect in the system */
+--ds-shadow-accent-glow:0 0 0 1px rgba(100,254,19,0.45),0 0 18px rgba(100,254,19,0.28); /* @kind shadow */
+--ds-shadow-accent-glow-strong:0 0 0 1px rgba(100,254,19,0.6),0 0 26px rgba(100,254,19,0.4); /* @kind shadow */
+}
