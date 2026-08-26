@@ -1,0 +1,40 @@
+/* Type foundations. The Figma file defines typography as Variables
+   (collection "typography"), not as Figma Text Styles — there are zero
+   TEXT styles in the source, so this file is authored from those variables.
+   Font families come from the file's fontstack/* variables. No font
+   binaries ship with the source; see readme.md > VISUAL FOUNDATIONS. */
+:root{
+--ds-font-sans:"SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+--ds-font-display:"SF Pro Display","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+--ds-font-mono:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+--ds-font-brand:"Mona Sans","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+--ds-weight-light:300;--ds-weight-normal:400;--ds-weight-medium:500;--ds-weight-semibold:600;
+/* text/display */
+--ds-text-display-size:40px;--ds-text-display-lineheight:56px;--ds-text-display-weight:500;
+/* text/title */
+--ds-text-title-large-size:32px;--ds-text-title-large-lineheight:48px;--ds-text-title-large-weight:600;
+--ds-text-title-medium-size:20px;--ds-text-title-medium-lineheight:32px;--ds-text-title-medium-weight:600;
+--ds-text-title-small-size:16px;--ds-text-title-small-lineheight:24px;--ds-text-title-small-weight:600;
+/* text/subtitle */
+--ds-text-subtitle-size:20px;--ds-text-subtitle-lineheight:32px;--ds-text-subtitle-weight:400;
+/* text/body */
+--ds-text-body-large-size:16px;--ds-text-body-large-lineheight:24px;
+--ds-text-body-medium-size:14px;--ds-text-body-medium-lineheight:20px;
+--ds-text-body-small-size:12px;--ds-text-body-small-lineheight:20px;
+--ds-text-body-weight:400;
+/* text/caption */
+--ds-text-caption-size:12px;--ds-text-caption-lineheight:16px;--ds-text-caption-weight:400;
+/* text/codeblock + codeinline */
+--ds-text-codeblock-size:13px;--ds-text-codeblock-lineheight:20px;--ds-text-codeblock-weight:400;
+--ds-text-codeinline-weight:400;
+}
+.ds-text-display{font-family:var(--ds-font-display);font-size:var(--ds-text-display-size);line-height:var(--ds-text-display-lineheight);font-weight:var(--ds-text-display-weight);color:var(--fgcolor-default);letter-spacing:-0.02em}
+.ds-text-title-large{font-family:var(--ds-font-display);font-size:var(--ds-text-title-large-size);line-height:var(--ds-text-title-large-lineheight);font-weight:var(--ds-text-title-large-weight);color:var(--fgcolor-default)}
+.ds-text-title-medium{font-family:var(--ds-font-sans);font-size:var(--ds-text-title-medium-size);line-height:var(--ds-text-title-medium-lineheight);font-weight:var(--ds-text-title-medium-weight);color:var(--fgcolor-default)}
+.ds-text-title-small{font-family:var(--ds-font-sans);font-size:var(--ds-text-title-small-size);line-height:var(--ds-text-title-small-lineheight);font-weight:var(--ds-text-title-small-weight);color:var(--fgcolor-default)}
+.ds-text-subtitle{font-family:var(--ds-font-display);font-size:var(--ds-text-subtitle-size);line-height:var(--ds-text-subtitle-lineheight);font-weight:var(--ds-text-subtitle-weight);color:var(--fgcolor-muted)}
+.ds-text-body-large{font-family:var(--ds-font-sans);font-size:var(--ds-text-body-large-size);line-height:var(--ds-text-body-large-lineheight);font-weight:var(--ds-text-body-weight);color:var(--fgcolor-default)}
+.ds-text-body{font-family:var(--ds-font-sans);font-size:var(--ds-text-body-medium-size);line-height:var(--ds-text-body-medium-lineheight);font-weight:var(--ds-text-body-weight);color:var(--fgcolor-default)}
+.ds-text-body-small{font-family:var(--ds-font-sans);font-size:var(--ds-text-body-small-size);line-height:var(--ds-text-body-small-lineheight);font-weight:var(--ds-text-body-weight);color:var(--fgcolor-default)}
+.ds-text-caption{font-family:var(--ds-font-sans);font-size:var(--ds-text-caption-size);line-height:var(--ds-text-caption-lineheight);font-weight:var(--ds-text-caption-weight);color:var(--fgcolor-muted)}
+.ds-text-code{font-family:var(--ds-font-mono);font-size:var(--ds-text-codeblock-size);line-height:var(--ds-text-codeblock-lineheight);font-weight:var(--ds-text-codeblock-weight)}

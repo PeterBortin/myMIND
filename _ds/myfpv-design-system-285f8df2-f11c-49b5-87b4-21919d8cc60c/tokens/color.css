@@ -1,0 +1,372 @@
+/* myFPV semantic colour roles.
+   Dark is the default. Every role the components consume is assigned here, so this
+   file — not the Figma extraction — is the colour source of truth. fig-tokens.css
+   is kept beneath it as the raw record of what the source file contained.
+
+   Two rules the palette forces:
+   1. #64FE13 has a relative luminance of ~0.75. Anything FILLED with the accent
+      takes --myfpv-9 (near-black), never --fgcolor-onemphasis. The rules at the
+      bottom of this file enforce that everywhere the accent is a fill.
+   2. Success carries NO colour. The brand is green, so a green "success" would
+      read as branding. Success uses neutral text plus its check icon; the
+      success tokens below are deliberately neutral. */
+
+:root,:root[data-theme="dark"],.dark{
+--bgcolor-default:var(--n-2); /* @kind color */
+--bgcolor-muted:var(--n-3); /* @kind color */
+--bgcolor-subtle:var(--n-3); /* @kind color */
+--bgcolor-inset:var(--n-1); /* @kind color */
+--bgcolor-inverse:var(--n-9); /* @kind color */
+--bgcolor-neutral-emphasis:var(--n-6); /* @kind color */
+--bgcolor-neutral-muted:rgba(223,238,212,0.1); /* @kind color */
+--bgcolor-transparent:transparent; /* @kind color */
+
+--fgcolor-default:var(--n-9); /* @kind color */
+--fgcolor-muted:var(--n-7); /* @kind color */
+--fgcolor-disabled:var(--n-6); /* @kind color */
+--fgcolor-onemphasis:var(--n-10); /* @kind color */
+--fgcolor-oninverse:var(--n-0); /* @kind color */
+--fgcolor-white:var(--n-10); /* @kind color */
+
+--bordercolor-default:var(--n-5); /* @kind color */
+--bordercolor-muted:var(--n-4); /* @kind color */
+--bordercolor-emphasis:var(--n-6); /* @kind color */
+--bordercolor-disabled:var(--n-4); /* @kind color */
+--bordercolor-translucent:rgba(223,238,212,0.12); /* @kind color */
+
+/* accent */
+--fgcolor-accent:var(--myfpv-3); /* @kind color */
+--fgcolor-link:var(--myfpv-3); /* @kind color */
+--bgcolor-accent-emphasis:var(--myfpv-4); /* @kind color */
+--bgcolor-accent-muted:rgba(100,254,19,0.13); /* @kind color */
+--bordercolor-accent-emphasis:var(--myfpv-5); /* @kind color */
+--bordercolor-accent-muted:rgba(100,254,19,0.35); /* @kind color */
+--focus-outlinecolor:var(--myfpv-4); /* @kind color */
+--selection-bgcolor:rgba(100,254,19,0.3); /* @kind color */
+--highlight-neutral-bgcolor:rgba(100,254,19,0.22); /* @kind color */
+
+/* success — no colour, by design */
+--fgcolor-success:var(--n-9); /* @kind color */
+--bgcolor-success-emphasis:var(--n-6); /* @kind color */
+--bgcolor-success-muted:var(--n-3); /* @kind color */
+--bordercolor-success-emphasis:var(--n-6); /* @kind color */
+--bordercolor-success-muted:var(--n-4); /* @kind color */
+
+/* remaining statuses, desaturated */
+--fgcolor-danger:var(--st-danger-fg); /* @kind color */
+--bgcolor-danger-emphasis:var(--st-danger-emphasis); /* @kind color */
+--bgcolor-danger-muted:rgba(217,154,154,0.12); /* @kind color */
+--bordercolor-danger-emphasis:var(--st-danger-emphasis); /* @kind color */
+--bordercolor-danger-muted:rgba(217,154,154,0.3); /* @kind color */
+--fgcolor-attention:var(--st-attention-fg); /* @kind color */
+--bgcolor-attention-emphasis:var(--st-attention-emphasis); /* @kind color */
+--bgcolor-attention-muted:rgba(211,196,140,0.12); /* @kind color */
+--bordercolor-attention-emphasis:var(--st-attention-emphasis); /* @kind color */
+--bordercolor-attention-muted:rgba(211,196,140,0.3); /* @kind color */
+--fgcolor-severe:var(--st-severe-fg); /* @kind color */
+--bgcolor-severe-emphasis:var(--st-severe-emphasis); /* @kind color */
+--bordercolor-severe-emphasis:var(--st-severe-emphasis); /* @kind color */
+--fgcolor-done:var(--st-done-fg); /* @kind color */
+--bgcolor-done-emphasis:var(--st-done-emphasis); /* @kind color */
+--bordercolor-done-emphasis:var(--st-done-emphasis); /* @kind color */
+--fgcolor-sponsors:var(--st-sponsors-fg); /* @kind color */
+--bordercolor-sponsors-emphasis:var(--st-sponsors-emphasis); /* @kind color */
+--fgcolor-upsell:var(--st-upsell-fg); /* @kind color */
+--bgcolor-upsell-muted:rgba(166,176,200,0.12); /* @kind color */
+--bordercolor-upsell-muted:rgba(166,176,200,0.3); /* @kind color */
+
+/* issue / PR state: open is the live state, so it takes the accent */
+--bgcolor-open-emphasis:var(--myfpv-5); /* @kind color */
+--bgcolor-closed-emphasis:var(--st-danger-emphasis); /* @kind color */
+
+/* buttons */
+--button-default-bgcolor-rest:var(--n-3); /* @kind color */
+--button-default-bgcolor-hover:var(--n-4); /* @kind color */
+--button-default-bgcolor-active:var(--n-5); /* @kind color */
+--button-default-bgcolor-disabled:var(--n-2); /* @kind color */
+--button-default-bordercolor-rest:var(--n-5); /* @kind color */
+--button-default-bordercolor-hover:var(--n-6); /* @kind color */
+--button-default-bordercolor-active:var(--n-6); /* @kind color */
+--button-default-bordercolor-disabled:var(--n-4); /* @kind color */
+--button-default-fgcolor-rest:var(--n-9); /* @kind color */
+--button-primary-bgcolor-rest:var(--myfpv-4); /* @kind color */
+--button-primary-bgcolor-hover:var(--myfpv-3); /* @kind color */
+--button-primary-bgcolor-active:var(--myfpv-5); /* @kind color */
+--button-primary-bgcolor-disabled:rgba(100,254,19,0.32); /* @kind color */
+--button-primary-bordercolor-rest:rgba(15,43,0,0.25); /* @kind color */
+--button-primary-bordercolor-disabled:rgba(15,43,0,0.15); /* @kind color */
+--button-primary-fgcolor-rest:var(--myfpv-9); /* @kind color */
+--button-primary-fgcolor-disabled:rgba(15,43,0,0.45); /* @kind color */
+--button-primary-iconcolor-rest:var(--myfpv-9); /* @kind color */
+--button-invisible-bgcolor-rest:transparent; /* @kind color */
+--button-invisible-bgcolor-hover:var(--n-3); /* @kind color */
+--button-invisible-bgcolor-active:var(--n-4); /* @kind color */
+--button-invisible-bgcolor-disabled:transparent; /* @kind color */
+--button-invisible-bordercolor-rest:transparent; /* @kind color */
+--button-invisible-fgcolor-rest:var(--n-9); /* @kind color */
+--button-invisible-fgcolor-hover:var(--n-9); /* @kind color */
+--button-invisible-fgcolor-disabled:var(--n-6); /* @kind color */
+--button-invisible-iconcolor-rest:var(--n-7); /* @kind color */
+--button-outline-bgcolor-rest:var(--n-3); /* @kind color */
+--button-outline-bgcolor-hover:var(--myfpv-4); /* @kind color */
+--button-outline-bgcolor-active:var(--myfpv-5); /* @kind color */
+--button-outline-bordercolor-hover:rgba(15,43,0,0.25); /* @kind color */
+--button-outline-fgcolor-rest:var(--myfpv-3); /* @kind color */
+--button-outline-fgcolor-hover:var(--myfpv-9); /* @kind color */
+--button-outline-fgcolor-active:var(--myfpv-9); /* @kind color */
+--button-danger-bgcolor-rest:var(--n-3); /* @kind color */
+--button-danger-bgcolor-hover:var(--st-danger-emphasis); /* @kind color */
+--button-danger-bgcolor-active:#642c2c; /* @kind color */
+--button-danger-bordercolor-rest:var(--n-5); /* @kind color */
+--button-danger-bordercolor-hover:var(--st-danger-emphasis); /* @kind color */
+--button-danger-fgcolor-rest:var(--st-danger-fg); /* @kind color */
+--button-danger-fgcolor-hover:var(--n-10); /* @kind color */
+--button-danger-fgcolor-active:var(--n-10); /* @kind color */
+--button-danger-iconcolor-rest:var(--st-danger-fg); /* @kind color */
+--button-danger-iconcolor-hover:var(--n-10); /* @kind color */
+--buttoncounter-default-bgcolor-rest:rgba(223,238,212,0.1); /* @kind color */
+--buttoncounter-primary-bgcolor-rest:rgba(15,43,0,0.2); /* @kind color */
+--buttoncounter-invisible-bgcolor-rest:rgba(223,238,212,0.1); /* @kind color */
+--buttoncounter-danger-bgcolor-rest:rgba(217,154,154,0.15); /* @kind color */
+--buttoncounter-danger-fgcolor-rest:var(--st-danger-fg); /* @kind color */
+--buttoncounter-outline-bgcolor-rest:rgba(100,254,19,0.16); /* @kind color */
+--buttoncounter-outline-fgcolor-rest:var(--myfpv-3); /* @kind color */
+
+/* form controls */
+--control-bgcolor-rest:var(--n-1); /* @kind color */
+--control-bgcolor-hover:var(--n-3); /* @kind color */
+--control-bgcolor-disabled:var(--n-2); /* @kind color */
+--control-bgcolor-selected:var(--n-3); /* @kind color */
+--control-bordercolor-rest:var(--n-5); /* @kind color */
+--control-bordercolor-emphasis:var(--n-6); /* @kind color */
+--control-bordercolor-disabled:var(--n-4); /* @kind color */
+--control-bordercolor-danger:var(--st-danger-emphasis); /* @kind color */
+--control-bordercolor-success:var(--n-6); /* @kind color */
+--control-fgcolor-rest:var(--n-9); /* @kind color */
+--control-fgcolor-disabled:var(--n-6); /* @kind color */
+--control-fgcolor-placeholder:var(--n-7); /* @kind color */
+--control-iconcolor-rest:var(--n-7); /* @kind color */
+--control-checked-bgcolor-rest:var(--myfpv-4); /* @kind color */
+--control-checked-bgcolor-hover:var(--myfpv-3); /* @kind color */
+--control-checked-bgcolor-active:var(--myfpv-5); /* @kind color */
+--control-checked-bgcolor-disabled:rgba(100,254,19,0.3); /* @kind color */
+--control-checked-bordercolor-rest:var(--myfpv-5); /* @kind color */
+--control-checked-bordercolor-hover:var(--myfpv-3); /* @kind color */
+--control-checked-bordercolor-disabled:rgba(100,254,19,0.2); /* @kind color */
+--control-checked-fgcolor-rest:var(--myfpv-9); /* @kind color */
+--control-checked-fgcolor-disabled:rgba(15,43,0,0.45); /* @kind color */
+--control-danger-fgcolor-rest:var(--st-danger-fg); /* @kind color */
+--control-danger-fgcolor-hover:var(--n-10); /* @kind color */
+--control-danger-bgcolor-hover:var(--st-danger-emphasis); /* @kind color */
+--control-transparent-bgcolor-hover:rgba(223,238,212,0.08); /* @kind color */
+--control-transparent-bgcolor-active:rgba(223,238,212,0.12); /* @kind color */
+--control-transparent-bgcolor-selected:rgba(223,238,212,0.1); /* @kind color */
+--controlknob-bgcolor-rest:var(--n-9); /* @kind color */
+--controlknob-bordercolor-rest:var(--n-5); /* @kind color */
+--controlknob-bordercolor-checked:var(--myfpv-5); /* @kind color */
+--controltrack-bgcolor-rest:var(--n-4); /* @kind color */
+--controltrack-bgcolor-hover:var(--n-5); /* @kind color */
+--controltrack-bgcolor-disabled:var(--n-2); /* @kind color */
+--controltrack-bordercolor-rest:var(--n-5); /* @kind color */
+--controltrack-bordercolor-disabled:var(--n-4); /* @kind color */
+
+/* chrome */
+--overlay-bgcolor:var(--n-2); /* @kind color */
+--overlay-bordercolor:var(--n-5); /* @kind color */
+--overlay-backdrop-bgcolor:rgba(1,3,0,0.65); /* @kind color */
+--header-bgcolor:var(--n-0); /* @kind color */
+--header-fgcolor-default:var(--n-9); /* @kind color */
+--header-fgcolor-logo:var(--myfpv-4); /* @kind color */
+--header-bordercolor-divider:var(--n-4); /* @kind color */
+--headersearch-bordercolor:var(--n-5); /* @kind color */
+--tooltip-bgcolor:var(--n-9); /* @kind color */
+--tooltip-fgcolor:var(--n-0); /* @kind color */
+--counter-bgcolor-muted:rgba(223,238,212,0.1); /* @kind color */
+--counter-bgcolor-emphasis:var(--n-6); /* @kind color */
+--counter-bordercolor:transparent; /* @kind color */
+--avatar-bgcolor:var(--n-3); /* @kind color */
+--avatar-bordercolor:rgba(223,238,212,0.1); /* @kind color */
+--skeletonloader-bgcolor:var(--n-3); /* @kind color */
+--topictag-bordercolor:var(--n-5); /* @kind color */
+--underlinenav-bordercolor-active:var(--myfpv-4); /* @kind color */
+--underlinenav-bordercolor-hover:var(--n-5); /* @kind color */
+--underlinenav-iconcolor-rest:var(--n-7); /* @kind color */
+--treeviewitem-leadingvisual-iconcolor-rest:var(--myfpv-5); /* @kind color */
+--diffstat-addition-bgcolor:var(--myfpv-5); /* @kind color */
+--diffstat-deletion-bgcolor:#8f4a4a; /* @kind color */
+--diffstat-neutral-bgcolor:var(--n-5); /* @kind color */
+
+/* data & display ramps, anchored on the accent */
+--data-green-color-emphasis:var(--myfpv-4); /* @kind color */
+--data-green-color-muted:rgba(100,254,19,0.2); /* @kind color */
+--data-lime-color-emphasis:var(--myfpv-2); /* @kind color */
+--data-teal-color-emphasis:#3fbfa4; /* @kind color */
+--data-blue-color-emphasis:#5590c9; /* @kind color */
+--data-purple-color-emphasis:#9b7fc4; /* @kind color */
+--data-yellow-color-emphasis:#c9b45f; /* @kind color */
+--data-orange-color-emphasis:#c98a52; /* @kind color */
+--data-red-color-emphasis:#c46a6a; /* @kind color */
+--data-pink-color-emphasis:#c4739e; /* @kind color */
+--data-gray-color-emphasis:var(--n-7); /* @kind color */
+--display-green-bgcolor-emphasis:var(--myfpv-5); /* @kind color */
+--display-green-bgcolor-muted:rgba(100,254,19,0.14); /* @kind color */
+--display-green-bordercolor-emphasis:var(--myfpv-6); /* @kind color */
+--display-green-bordercolor-muted:rgba(100,254,19,0.35); /* @kind color */
+--display-green-fgcolor:var(--myfpv-3); /* @kind color */
+--base-color-green-1:rgba(100,254,19,0.22); /* @kind color */
+--base-color-green-3:rgba(100,254,19,0.45); /* @kind color */
+--base-color-green-5:var(--myfpv-5); /* @kind color */
+--base-color-green-7:var(--myfpv-4); /* @kind color */
+--label-green-bgcolor-rest:rgba(100,254,19,0.14); /* @kind color */
+--label-green-bgcolor-hover:rgba(100,254,19,0.24); /* @kind color */
+--label-green-bgcolor-active:rgba(100,254,19,0.32); /* @kind color */
+--label-green-fgcolor-rest:var(--myfpv-3); /* @kind color */
+--label-green-fgcolor-hover:var(--myfpv-2); /* @kind color */
+--label-green-fgcolor-active:var(--myfpv-1); /* @kind color */
+}
+
+/* Light theme — the same system on green-tinted off-white. */
+:root[data-theme="light"],.light{
+--bgcolor-default:var(--l-0); /* @kind color */
+--bgcolor-muted:var(--l-1); /* @kind color */
+--bgcolor-subtle:var(--l-1); /* @kind color */
+--bgcolor-inset:var(--l-2); /* @kind color */
+--bgcolor-inverse:var(--l-8); /* @kind color */
+--bgcolor-neutral-emphasis:var(--l-6); /* @kind color */
+--bgcolor-neutral-muted:var(--l-2); /* @kind color */
+--fgcolor-default:var(--l-8); /* @kind color */
+--fgcolor-muted:var(--l-6); /* @kind color */
+--fgcolor-disabled:var(--l-5); /* @kind color */
+--fgcolor-onemphasis:var(--l-0); /* @kind color */
+--fgcolor-oninverse:var(--l-0); /* @kind color */
+--bordercolor-default:var(--l-4); /* @kind color */
+--bordercolor-muted:var(--l-3); /* @kind color */
+--bordercolor-emphasis:var(--l-5); /* @kind color */
+--bordercolor-disabled:var(--l-3); /* @kind color */
+--bordercolor-translucent:rgba(19,26,14,0.12); /* @kind color */
+--fgcolor-accent:var(--myfpv-7); /* @kind color */
+--fgcolor-link:var(--myfpv-7); /* @kind color */
+--bgcolor-accent-emphasis:var(--myfpv-4); /* @kind color */
+--bgcolor-accent-muted:var(--myfpv-0); /* @kind color */
+--bordercolor-accent-emphasis:var(--myfpv-5); /* @kind color */
+--bordercolor-accent-muted:rgba(100,254,19,0.5); /* @kind color */
+--focus-outlinecolor:var(--myfpv-6); /* @kind color */
+--selection-bgcolor:rgba(100,254,19,0.35); /* @kind color */
+--highlight-neutral-bgcolor:var(--myfpv-1); /* @kind color */
+--fgcolor-success:var(--l-8); /* @kind color */
+--bgcolor-success-emphasis:var(--l-6); /* @kind color */
+--bgcolor-success-muted:var(--l-1); /* @kind color */
+--bordercolor-success-emphasis:var(--l-5); /* @kind color */
+--bordercolor-success-muted:var(--l-3); /* @kind color */
+--fgcolor-danger:var(--st-danger-fg-light); /* @kind color */
+--bgcolor-danger-emphasis:var(--st-danger-fg-light); /* @kind color */
+--bgcolor-danger-muted:rgba(143,63,63,0.08); /* @kind color */
+--bordercolor-danger-emphasis:var(--st-danger-fg-light); /* @kind color */
+--bordercolor-danger-muted:rgba(143,63,63,0.25); /* @kind color */
+--fgcolor-attention:var(--st-attention-fg-light); /* @kind color */
+--bgcolor-attention-emphasis:var(--st-attention-fg-light); /* @kind color */
+--bgcolor-attention-muted:rgba(107,90,31,0.08); /* @kind color */
+--bordercolor-attention-emphasis:var(--st-attention-fg-light); /* @kind color */
+--bordercolor-attention-muted:rgba(107,90,31,0.25); /* @kind color */
+--fgcolor-severe:var(--st-severe-fg-light); /* @kind color */
+--bgcolor-severe-emphasis:var(--st-severe-fg-light); /* @kind color */
+--bordercolor-severe-emphasis:var(--st-severe-fg-light); /* @kind color */
+--fgcolor-done:var(--st-done-fg-light); /* @kind color */
+--bgcolor-done-emphasis:var(--st-done-fg-light); /* @kind color */
+--bordercolor-done-emphasis:var(--st-done-fg-light); /* @kind color */
+--fgcolor-sponsors:var(--st-sponsors-fg-light); /* @kind color */
+--bordercolor-sponsors-emphasis:var(--st-sponsors-fg-light); /* @kind color */
+--fgcolor-upsell:var(--st-upsell-fg-light); /* @kind color */
+--bgcolor-upsell-muted:rgba(74,86,128,0.08); /* @kind color */
+--bordercolor-upsell-muted:rgba(74,86,128,0.25); /* @kind color */
+--bgcolor-open-emphasis:var(--myfpv-6); /* @kind color */
+--bgcolor-closed-emphasis:var(--st-danger-fg-light); /* @kind color */
+--button-default-bgcolor-rest:var(--l-0); /* @kind color */
+--button-default-bgcolor-hover:var(--l-2); /* @kind color */
+--button-default-bgcolor-active:var(--l-3); /* @kind color */
+--button-default-bgcolor-disabled:var(--l-1); /* @kind color */
+--button-default-bordercolor-rest:var(--l-4); /* @kind color */
+--button-default-bordercolor-hover:var(--l-5); /* @kind color */
+--button-default-bordercolor-active:var(--l-5); /* @kind color */
+--button-default-bordercolor-disabled:var(--l-3); /* @kind color */
+--button-default-fgcolor-rest:var(--l-8); /* @kind color */
+--button-invisible-bgcolor-hover:var(--l-2); /* @kind color */
+--button-invisible-bgcolor-active:var(--l-3); /* @kind color */
+--button-invisible-fgcolor-rest:var(--l-8); /* @kind color */
+--button-invisible-fgcolor-hover:var(--l-8); /* @kind color */
+--button-invisible-fgcolor-disabled:var(--l-5); /* @kind color */
+--button-invisible-iconcolor-rest:var(--l-6); /* @kind color */
+--button-outline-bgcolor-rest:var(--l-0); /* @kind color */
+--button-outline-fgcolor-rest:var(--myfpv-7); /* @kind color */
+--button-danger-bgcolor-rest:var(--l-0); /* @kind color */
+--button-danger-bgcolor-hover:var(--st-danger-fg-light); /* @kind color */
+--button-danger-bordercolor-rest:var(--l-4); /* @kind color */
+--button-danger-fgcolor-rest:var(--st-danger-fg-light); /* @kind color */
+--button-danger-iconcolor-rest:var(--st-danger-fg-light); /* @kind color */
+--buttoncounter-default-bgcolor-rest:var(--l-2); /* @kind color */
+--buttoncounter-invisible-bgcolor-rest:var(--l-2); /* @kind color */
+--buttoncounter-outline-bgcolor-rest:rgba(100,254,19,0.2); /* @kind color */
+--buttoncounter-outline-fgcolor-rest:var(--myfpv-7); /* @kind color */
+--control-bgcolor-rest:var(--l-0); /* @kind color */
+--control-bgcolor-hover:var(--l-1); /* @kind color */
+--control-bgcolor-disabled:var(--l-2); /* @kind color */
+--control-bgcolor-selected:var(--l-2); /* @kind color */
+--control-bordercolor-rest:var(--l-4); /* @kind color */
+--control-bordercolor-emphasis:var(--l-5); /* @kind color */
+--control-bordercolor-disabled:var(--l-3); /* @kind color */
+--control-bordercolor-success:var(--l-5); /* @kind color */
+--control-fgcolor-rest:var(--l-8); /* @kind color */
+--control-fgcolor-disabled:var(--l-5); /* @kind color */
+--control-fgcolor-placeholder:var(--l-6); /* @kind color */
+--control-iconcolor-rest:var(--l-6); /* @kind color */
+--control-transparent-bgcolor-hover:rgba(19,26,14,0.06); /* @kind color */
+--control-transparent-bgcolor-active:rgba(19,26,14,0.1); /* @kind color */
+--control-transparent-bgcolor-selected:rgba(19,26,14,0.08); /* @kind color */
+--controlknob-bgcolor-rest:var(--l-0); /* @kind color */
+--controlknob-bordercolor-rest:var(--l-4); /* @kind color */
+--controltrack-bgcolor-rest:var(--l-3); /* @kind color */
+--controltrack-bgcolor-hover:var(--l-4); /* @kind color */
+--controltrack-bordercolor-rest:var(--l-4); /* @kind color */
+--overlay-bgcolor:var(--l-0); /* @kind color */
+--overlay-bordercolor:var(--l-3); /* @kind color */
+--overlay-backdrop-bgcolor:rgba(19,26,14,0.4); /* @kind color */
+--header-bgcolor:var(--l-8); /* @kind color */
+--header-fgcolor-default:var(--n-9); /* @kind color */
+--header-bordercolor-divider:var(--n-5); /* @kind color */
+--headersearch-bordercolor:var(--n-6); /* @kind color */
+--tooltip-bgcolor:var(--l-8); /* @kind color */
+--tooltip-fgcolor:var(--l-0); /* @kind color */
+--counter-bgcolor-muted:var(--l-2); /* @kind color */
+--counter-bgcolor-emphasis:var(--l-6); /* @kind color */
+--avatar-bgcolor:var(--l-1); /* @kind color */
+--avatar-bordercolor:rgba(19,26,14,0.1); /* @kind color */
+--skeletonloader-bgcolor:var(--l-2); /* @kind color */
+--topictag-bordercolor:var(--l-4); /* @kind color */
+--underlinenav-bordercolor-hover:var(--l-3); /* @kind color */
+--underlinenav-iconcolor-rest:var(--l-6); /* @kind color */
+--treeviewitem-leadingvisual-iconcolor-rest:var(--myfpv-6); /* @kind color */
+--data-green-color-muted:var(--myfpv-1); /* @kind color */
+--display-green-bgcolor-muted:var(--myfpv-0); /* @kind color */
+--display-green-fgcolor:var(--myfpv-7); /* @kind color */
+--base-color-green-1:var(--myfpv-1); /* @kind color */
+--base-color-green-3:var(--myfpv-3); /* @kind color */
+--base-color-green-5:var(--myfpv-5); /* @kind color */
+--base-color-green-7:var(--myfpv-8); /* @kind color */
+--label-green-bgcolor-rest:var(--myfpv-1); /* @kind color */
+--label-green-bgcolor-hover:var(--myfpv-2); /* @kind color */
+--label-green-bgcolor-active:var(--myfpv-3); /* @kind color */
+--label-green-fgcolor-rest:var(--myfpv-8); /* @kind color */
+--label-green-fgcolor-hover:var(--myfpv-9); /* @kind color */
+--label-green-fgcolor-active:var(--myfpv-9); /* @kind color */
+}
+
+/* Rule 1: near-black text on any accent fill. */
+.ds-announcement--accent,.ds-counter--primary,.ds-iconbtn--primary,.ds-notification--accent,
+.ds-pagination__item[aria-current=page],.ds-subnav__item[aria-current=page],.ds-topictag:hover,
+.ds-statelabel--open,.ds-progress .ds-progress__item--accent{color:var(--myfpv-9)}
+
+/* Rule 2: the accent glows. The only non-flat treatment in the system. */
+.ds-btn--primary{box-shadow:var(--ds-shadow-accent-glow)}
+.ds-btn--primary:hover:not(:disabled){box-shadow:var(--ds-shadow-accent-glow-strong)}
+.ds-btn--primary:disabled{box-shadow:none}
+:focus-visible{box-shadow:0 0 12px rgba(100,254,19,0.35)}

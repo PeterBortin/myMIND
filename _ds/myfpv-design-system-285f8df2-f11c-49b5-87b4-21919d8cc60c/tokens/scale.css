@@ -1,0 +1,61 @@
+/* Unit-resolved aliases over tokens/fig-tokens.css.
+   fig-tokens.css carries Figma FLOAT variables as unitless numbers; these
+   --ds-* aliases attach px so components can use them directly.
+   Every value below is the exact value read from the Figma file. */
+:root{
+/* radii */
+--ds-radius-small:calc(var(--borderradius-small) * 1px);
+--ds-radius-medium:calc(var(--borderradius-medium) * 1px);
+--ds-radius-large:calc(var(--borderradius-large) * 1px);
+--ds-radius-full:calc(var(--borderradius-full) * 1px);
+/* base size scale */
+--ds-size-2:2px;--ds-size-4:4px;--ds-size-6:6px;--ds-size-8:8px;--ds-size-12:12px;--ds-size-16:16px;--ds-size-20:20px;--ds-size-24:24px;--ds-size-28:28px;--ds-size-32:32px;--ds-size-36:36px;--ds-size-40:40px;--ds-size-44:44px;--ds-size-48:48px;--ds-size-64:64px;--ds-size-80:80px;--ds-size-96:96px;--ds-size-112:112px;--ds-size-128:128px;
+/* functional space */
+--ds-space-xxsmall:2px;--ds-space-xsmall:4px;--ds-space-small:6px;--ds-space-medium:8px;--ds-space-large:12px;--ds-space-xlarge:16px;
+/* stack (layout) */
+--ds-stack-gap-condensed:8px;--ds-stack-gap-normal:16px;--ds-stack-gap-spacious:24px;
+--ds-stack-padding-condensed:8px;--ds-stack-padding-normal:16px;--ds-stack-padding-spacious:24px;
+/* control geometry */
+--ds-control-xsmall-size:24px;--ds-control-small-size:28px;--ds-control-medium-size:32px;--ds-control-large-size:40px;--ds-control-xlarge-size:48px;
+--ds-control-xsmall-paddingblock:2px;--ds-control-small-paddingblock:4px;--ds-control-medium-paddingblock:6px;--ds-control-large-paddingblock:10px;--ds-control-xlarge-paddingblock:14px;
+--ds-control-paddinginline-condensed:8px;--ds-control-paddinginline-normal:12px;--ds-control-paddinginline-spacious:16px;
+--ds-control-xsmall-paddinginline-condensed:4px;--ds-control-xsmall-paddinginline-normal:8px;
+--ds-control-small-gap:4px;--ds-control-medium-gap:8px;--ds-control-large-gap:8px;
+--ds-control-lineboxheight:20px;
+--ds-control-mintarget-fine:16px;--ds-control-mintarget-coarse:44px;
+/* overlay geometry */
+--ds-overlay-width-xsmall:192px;--ds-overlay-width-small:320px;--ds-overlay-width-medium:480px;--ds-overlay-width-large:640px;--ds-overlay-width-xlarge:960px;
+--ds-overlay-height-small:256px;--ds-overlay-height-medium:320px;--ds-overlay-height-large:432px;--ds-overlay-height-xlarge:600px;
+--ds-overlay-offset:4px;--ds-overlay-padding-condensed:8px;--ds-overlay-padding-normal:16px;
+--ds-overlay-paddingblock-condensed:4px;--ds-overlay-paddingblock-normal:12px;
+--ds-overlay-radius:calc(var(--overlay-borderradius) * 1px);
+/* breakpoints (for reference; use in media queries literally) */
+--ds-breakpoint-xsmall:320px;--ds-breakpoint-small:544px;--ds-breakpoint-medium:768px;--ds-breakpoint-large:1012px;--ds-breakpoint-xlarge:1280px;--ds-breakpoint-xxlarge:1400px;
+/* borders */
+--ds-borderwidth-thin:1px;--ds-borderwidth-thick:2px;--ds-borderwidth-thicker:4px;
+/* composed shadows (assembled from the file's offsetX/offsetY/blur/spread/color parts) */
+--ds-shadow-resting-xsmall:0 1px 0 rgba(31,35,40,0.1);
+--ds-shadow-resting-small:0 1px 0 rgba(31,35,40,0.04);
+--ds-shadow-resting-small-raised:0 1px 0 rgba(31,35,40,0.06),0 1px 3px rgba(31,35,40,0.08);
+--ds-shadow-resting-medium:0 3px 6px rgba(37,41,46,0.12);
+--ds-shadow-floating-small:0 0 0 1px rgba(209,217,224,0.5),0 6px 12px -3px rgba(37,41,46,0.04),0 6px 18px rgba(37,41,46,0.12);
+--ds-shadow-floating-medium:0 0 0 1px rgba(209,217,224,0.5),0 8px 16px -4px rgba(37,41,46,0.08),0 4px 32px -4px rgba(37,41,46,0.08),0 24px 48px -12px rgba(37,41,46,0.08),0 48px 96px -24px rgba(37,41,46,0.08);
+--ds-shadow-floating-large:0 0 0 1px rgba(209,217,224,0.5),0 40px 80px rgba(37,41,46,0.24);
+--ds-shadow-floating-xlarge:0 0 0 1px rgba(209,217,224,0.5),0 56px 112px rgba(37,41,46,0.32);
+--ds-shadow-inset:inset 0 1px 0 rgba(31,35,40,0.04);
+/* component shadows */
+--ds-shadow-button-default:0 1px 0 rgba(31,35,40,0.04);
+--ds-shadow-button-primary-inset:inset 0 1px 0 rgba(255,255,255,0.25);
+--ds-shadow-button-primary-selected:0 1px 0 rgba(0,45,17,0.3);
+--ds-shadow-button-danger-selected:0 1px 0 rgba(76,0,20,0.2);
+--ds-shadow-button-outline-selected:0 1px 0 rgba(0,33,85,0.2);
+--ds-shadow-avatar:0 0 0 2px rgba(255,255,255,0.8);
+/* focus */
+--ds-focus-outline:2px solid var(--focus-outlinecolor);
+--ds-focus-outline-offset:-2px;
+/* motion — the file animates only the Spinner; UI transitions are short and linear-ish */
+--ds-duration-fast:80ms; /* @kind other */
+--ds-duration-default:0.2s; /* @kind other */
+--ds-duration-slow:0.32s; /* @kind other */
+--ds-easing-default:cubic-bezier(0.33,1,0.68,1); /* @kind other */
+}
