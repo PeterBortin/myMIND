@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#0d1209">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MiND — канвас мислення</title>
+<style>
+:root{
+  --bg:#0d1209;--panel:#131a0e;--panel2:#1a2314;--panel3:#232e1b;--line:#2f3d25;--line2:#435434;
+  --fg:#dfeed4;--mute:#7b9169;--acc:#64fe13;--acc-ink:#0f2b00;--warn:#d99a9a;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,Roboto,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+#app{position:fixed;inset:0;overflow:hidden}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transform:scaleX(-1);filter:brightness(.32) saturate(.6);opacity:0;transition:opacity .4s}
+video.on{opacity:1}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#gl{pointer-events:none}
+#fx{touch-action:none;cursor:default}
+#fx.grab{cursor:grab}#fx.grabbing{cursor:grabbing}#fx.cross{cursor:crosshair}#fx.pan{cursor:move}
+
+/* ── chrome ── */
+.bar{position:absolute;left:0;right:0;display:flex;align-items:center;gap:8px;padding:8px 10px;pointer-events:none;z-index:5}
+.bar>*{pointer-events:auto}
+#top{top:0;padding-top:calc(8px + var(--sat))}
+#top .lvl{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+#top .name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top .sub{font-family:var(--mono);font-size:10px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumbs{display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none;max-width:60vw}
+.crumbs::-webkit-scrollbar{display:none}
+.crumb{flex:0 0 auto;font-family:var(--mono);font-size:10px;color:var(--mute);background:transparent;border:1px solid transparent;border-radius:999px;padding:4px 8px;cursor:pointer;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;min-height:28px}
+.crumb.cur{color:var(--acc-ink);background:var(--acc);border-color:var(--acc)}
+.crumb .sep{opacity:.5;margin-right:4px}
+
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--fg);font:600 12px var(--sans);border-radius:999px;height:40px;min-width:40px;padding:0 14px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .12s,border-color .12s,transform .08s}
+.btn:active{transform:scale(.96)}
+.btn:hover{background:var(--panel3);border-color:var(--line2)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--panel2)}
+.btn.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.btn.on:hover{background:#7dff3a}
+.btn.sm{height:30px;font-size:11px;padding:0 11px;min-width:30px}
+.btn.icon{padding:0;width:40px}
+.btn.sm.icon{width:30px}
+.btn{flex:0 0 auto}
+.btn svg{flex:0 0 auto;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn.icon svg{width:18px;height:18px}
+.btn.icon.sm svg{width:15px;height:15px}
+.btn.danger{color:var(--warn)}
+.btn:disabled{opacity:.4;pointer-events:none}
+
+#bottom{bottom:0;flex-direction:column;align-items:stretch;gap:8px;padding:8px 10px calc(10px + var(--sab));background:linear-gradient(180deg,rgba(13,18,9,0) 0%,rgba(13,18,9,.92) 30%)}
+#bottom .row{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}
+#bottom .row::-webkit-scrollbar{display:none}
+@media (max-width:400px){#bThread span,#bSelect span{display:none}#bThread,#bSelect{width:40px;padding:0}}
+#bottom .row .sp{flex:1 1 auto}
+#hint{font-family:var(--mono);font-size:10px;color:var(--mute);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;min-height:12px}
+#hint b{color:var(--fg);font-weight:500}
+
+body.desk #top{padding:12px 12px 0}
+body.desk .btn{height:30px;font-size:11px;padding:0 11px;min-width:30px}
+body.desk .btn.icon{width:30px}
+body.desk .crumb{min-height:24px;padding:2px 8px}
+body.desk #bottom{align-items:center;padding:8px 12px 12px;background:none}
+body.desk #bottom .row{justify-content:center}
+body.desk #sheet{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);width:auto;max-width:min(92vw,720px)}
+
+#ruler{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none;flex-direction:column;align-items:flex-end;z-index:4}
+body.desk #ruler{display:flex}
+#ruler .cap{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--mute);margin-bottom:4px}
+#ruler button{display:flex;align-items:center;justify-content:flex-end;gap:8px;background:none;border:0;padding:0 0 0 14px;cursor:pointer;height:34px;color:var(--mute);font-family:var(--mono);font-size:10px}
+#ruler button i{display:block;height:1px;width:9px;background:currentColor}
+#ruler button.cur{color:var(--acc)}#ruler button.cur i{width:22px}#ruler button.near i{width:14px}
+
+#sheet{display:none;grid-template-columns:repeat(2,1fr);gap:6px;padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:4px}
+#sheet.open{display:grid}
+body.desk #sheet.open{display:flex;flex-wrap:wrap;justify-content:center}
+#sheet .btn{height:40px;justify-content:flex-start}
+body.desk #sheet .btn{height:30px}
+#sheet .wide{grid-column:1/-1}
+
+#search{display:none;align-items:center;gap:6px}
+#search.open{display:flex}
+#search input{width:150px;height:36px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:0 12px;color:var(--fg);font:400 13px var(--sans);outline:none}
+#search input:focus{border-color:var(--acc)}
+body.desk #search input{height:30px;width:180px}
+
+/* ── overlays ── */
+.ov{position:absolute;left:0;top:0;z-index:6;will-change:transform;pointer-events:none}
+#tip{animation:fade .12s linear}
+#tip .box{transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;max-width:260px}
+#tip .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+#tip .m{font-family:var(--mono);font-size:10px;color:var(--mute)}
+
+#menu{pointer-events:auto}
+#menu .ring{position:relative;width:0;height:0;animation:pop .14s cubic-bezier(.33,1,.68,1)}
+#menu .pill{position:absolute;transform:translate(-50%,-50%);min-width:44px;height:44px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);font:600 12px var(--sans);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:background .1s,border-color .1s,transform .1s}
+#menu .pill svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#menu .pill.hot,#menu .pill:hover{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);transform:translate(-50%,-50%) scale(1.08)}
+#menu .pill.danger{color:var(--warn)}
+#menu .pill.danger.hot{background:#5a2a2a;color:#ffd4d4;border-color:#7a3a3a}
+#menu .core{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(100,254,19,.18)}
+
+#editor{pointer-events:auto;z-index:8}
+#editor .box{transform:translateX(-50%);width:min(300px,86vw);background:var(--bg);border:1px solid var(--acc);border-radius:10px;padding:6px 6px 6px 10px;box-shadow:0 0 0 1px rgba(100,254,19,.35),0 0 22px rgba(100,254,19,.22);display:flex;align-items:flex-end;gap:6px}
+#editor textarea{flex:1 1 auto;background:transparent;border:0;outline:none;color:var(--fg);font:400 14px/1.3 var(--sans);resize:none;min-height:22px;max-height:96px;padding:4px 0;-webkit-user-select:text;user-select:text}
+#editor .btn{height:30px;min-width:30px;padding:0 10px;flex:0 0 auto}
+#editor .btn.icon{width:30px}
+#editor .mic.live{color:var(--acc);border-color:var(--acc);animation:pulse 1.2s infinite}
+#editor.dock{left:0!important;right:0;transform:none!important;top:auto!important}
+#editor.dock .box{transform:none;width:auto;margin:0 10px;border-radius:12px 12px 0 0;border-bottom:0}
+
+#toast{position:absolute;left:12px;bottom:calc(118px + var(--sab));z-index:9;pointer-events:none;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+body.desk #toast{bottom:62px}
+#toast .t{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--fg);animation:toast .16s cubic-bezier(.33,1,.68,1);display:flex;align-items:center;gap:10px;pointer-events:auto}
+#toast .t button{background:none;border:0;color:var(--acc);font:600 11px var(--mono);cursor:pointer;padding:0}
+
+#airstrip{position:absolute;left:50%;top:calc(66px + var(--sat));transform:translateX(-50%);max-width:min(92vw,620px);z-index:6;pointer-events:none;display:none;animation:fade .16s}
+#airstrip.on{display:block}
+#airstrip .box{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+#airstrip .dot{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px rgba(100,254,19,.18);flex:0 0 auto}
+#airstrip .dot.wait{background:var(--mute);animation:pulse 1s infinite}
+#airstrip span{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#airchips{position:absolute;left:50%;top:calc(108px + var(--sat));transform:translateX(-50%);display:none;gap:6px;z-index:6}
+#airchips.on{display:flex}
+
+#empty{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none;text-align:center;padding:0 24px;z-index:3}
+#empty.on{display:flex}
+#empty .t{font-size:16px;font-weight:600}
+#empty .b{font-size:13px;color:var(--mute);max-width:320px;text-wrap:pretty}
+
+#onb{position:absolute;inset:0;z-index:20;display:none;align-items:flex-end;justify-content:center;background:rgba(13,18,9,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#onb.on{display:flex}
+#onb .card{width:min(440px,100%);margin:0 10px calc(12px + var(--sab));background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;animation:toast .2s cubic-bezier(.33,1,.68,1)}
+#onb h2{font-size:16px}
+#onb p{font-size:13px;color:var(--mute);line-height:1.45}
+#onb .g{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px;align-items:center}
+#onb .g b{font-family:var(--mono);font-size:11px;color:var(--acc);font-weight:500;white-space:nowrap}
+#onb .acts{display:flex;gap:8px;justify-content:flex-end}
+
+.label{position:absolute;left:0;top:0;pointer-events:none;z-index:3}
+.label span{display:block;transform:translate(-50%,-50%);background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--fg);white-space:nowrap}
+
+/* haptic trick for iOS: a switch that we toggle programmatically */
+#hap{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0}
+
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes toast{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <video id="cam" playsinline muted autoplay></video>
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+
+  <div id="empty"><span class="t"></span><span class="b"></span></div>
+  <div id="labels"></div>
+
+  <div id="top" class="bar">
+    <div class="lvl"><span class="name"></span><span class="sub"></span></div>
+    <div class="crumbs" id="crumbs"></div>
+    <div id="search"><input placeholder="Пошук думки" spellcheck="false" autocomplete="off"></div>
+    <button class="btn ghost icon" id="bSearch" title="Пошук"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    <button class="btn ghost icon" id="bHelp" title="Жести"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7M12 17h.01"/></svg></button>
+  </div>
+
+  <div id="ruler"><span class="cap">МАСШТАБ</span><div id="rulerItems"></div></div>
+
+  <div id="bottom" class="bar">
+    <div id="sheet">
+      <button class="btn" id="bTidy"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></svg>Впорядкувати</button>
+      <button class="btn" id="bMagnet" title="Магніт: думки тягнуться до курсора"><svg viewBox="0 0 24 24"><path d="M6 4v8a6 6 0 0 0 12 0V4"/><path d="M6 4h4v8a2 2 0 0 0 4 0V4h4"/></svg>Магніт</button>
+      <button class="btn" id="bFocus"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>Фокус</button>
+      <button class="btn" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>Назад</button>
+      <button class="btn" id="bRedo"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg>Вперед</button>
+      <button class="btn" id="bSound"><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg><span>Звук</span></button>
+      <button class="btn" id="bAir"><svg viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6.5a1.5 1.5 0 0 1 3 0V13"/><path d="M17 13a1.5 1.5 0 0 1 3 0v2a7 7 0 0 1-7 7h-1a7 7 0 0 1-5.6-2.8L4 14.5a1.5 1.5 0 0 1 2.4-1.8L8 14"/></svg><span>Air</span></button>
+      <button class="btn" id="bPng"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg>PNG</button>
+      <button class="btn" id="bMd"><svg viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>Текст</button>
+      <button class="btn" id="bJsonOut"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>Експорт JSON</button>
+      <button class="btn" id="bJsonIn"><svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 19h16"/></svg>Імпорт JSON</button>
+      <button class="btn" id="bExpand" style="display:none"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Розгорнути</span></button>
+      <button class="btn" id="bShake" style="display:none"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M3 8v8M21 8v8"/></svg>Струс = впорядкувати</button>
+      <button class="btn danger wide" id="bClear"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Очистити полотно</button>
+    </div>
+    <div class="row">
+      <button class="btn icon" id="bUp" title="На рівень вище"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      <button class="btn on" id="bNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Нова думка</span></button>
+      <button class="btn" id="bThread" title="Режим нитки: тап по двох думках"><svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8 16c3-1 5-3 8-8"/></svg><span>Нитка</span></button>
+      <button class="btn" id="bSelect" title="Вибір кількох думок"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg><span>Вибір</span></button>
+      <span class="sp"></span>
+      <button class="btn icon" id="bMore" title="Меню"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+    </div>
+    <div class="row" id="selbar" style="display:none">
+      <span id="selCount" style="font:600 12px var(--sans);color:var(--acc);padding:0 6px;white-space:nowrap">0</span>
+      <button class="btn on" id="bGroup"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="11" r="2"/><circle cx="15" cy="13" r="2"/></svg><span>Згрупувати</span></button>
+      <button class="btn" id="bMerge"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg><span>Злити</span></button>
+      <button class="btn" id="bLinkAll" title="Зв'язати всі вибрані між собою"><svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8 16c3-1 5-3 8-8"/></svg></button>
+      <span class="sp"></span>
+      <button class="btn ghost" id="bSelCancel">Скасувати</button>
+    </div>
+    <div id="hint"></div>
+  </div>
+
+  <div id="tip" class="ov" style="display:none"><div class="box"><span class="t"></span><span class="m"></span></div></div>
+  <div id="menu" class="ov" style="display:none"><div class="ring"><i class="core"></i></div></div>
+  <div id="editor" class="ov" style="display:none"><div class="box"><textarea rows="1" placeholder="Сформулюй думку…" spellcheck="false"></textarea><button class="btn icon mic" id="bMic" title="Диктувати"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn icon on" id="bOk" title="Зберегти"><svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg></button></div></div>
+  <div id="airstrip"><div class="box"><i class="dot"></i><span></span></div></div>
+  <div id="airchips"><button class="btn sm" id="bFlip">Фліп камери</button><button class="btn sm" id="bAirOff">Вимкнути Air</button></div>
+  <div id="toast"></div>
+
+  <div id="onb"><div class="card">
+    <h2>MiND — канвас мислення</h2>
+    <p>Думки — краплі. Близькі зливаються, зв'язані тримаються разом, старі тьмяніють. Кожну думку можна відкрити як окремий рівень.</p>
+    <div class="g" id="onbG"></div>
+    <div class="acts"><button class="btn" id="onbSkip">Зрозуміло</button><button class="btn on" id="onbGo">Почати</button></div>
+  </div></div>
+
+  <label id="hap"><input type="checkbox" switch></label>
+</div>
+<script>
+(() => {
+'use strict';
+// ═══════════════════════════════════════════════════════════════════
+//  MiND — канвас мислення. Один файл, без збірки.
+//  Шари: video → WebGL2 (метаболи) → Canvas2D (нитки, підписи, Air) → DOM UI
+// ═══════════════════════════════════════════════════════════════════
+const KEY = 'mind-canvas-v2';           // той самий ключ, що й у попередній версії
+const PREF = 'mind-prefs-v3';
+const CATS = ['#a8bd97', '#d3c48c', '#b2a6c8', '#a6b0c8', '#d3ab8c', '#5a4646'];
+const CAT_NAMES = ['нейтральна', 'увага', 'ідея', 'питання', 'ризик', 'у горизонт'];
+const LINK_KINDS = ['звичайний', 'причина', 'протиріччя', 'приклад'];
+const LINK_TONE = ['100,254,19', '100,254,19', '217,154,154', '211,196,140'];
+const BG = [13, 18, 9];
+const ACC = '#64fe13';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const hyp = Math.hypot;
+const now = () => performance.now();
+function plural(n, f) { const a = n % 10, b = n % 100; if (a === 1 && b !== 11) return f[0]; if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return f[1]; return f[2]; }
+function hexRgb(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+function towardBg(hex, t) { const c = hexRgb(hex); return 'rgb(' + c.map((v, i) => Math.round(v + (BG[i] - v) * t)).join(',') + ')'; }
+const CATRGB = CATS.map(hexRgb);
+const prefs = (() => { try { return Object.assign({ sound: false, labels: true, onb: true, shake: false }, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (e) { return { sound: false, labels: true, onb: true, shake: false }; } })();
+const savePrefs = () => { try { localStorage.setItem(PREF, JSON.stringify(prefs)); } catch (e) {} };
+
+// ── Пристрій ──
+const coarse = matchMedia('(pointer: coarse)').matches;
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+let mobile = coarse || innerWidth < 760;
+
+// ── Хептики: vibrate на Android, трюк зі switch на iOS 17.4+ ──
+const hapEl = $('#hap input');
+function buzz(p) {
+  try { if (navigator.vibrate && navigator.vibrate(p)) return; } catch (e) {}
+  if (isIOS && hapEl) { try { hapEl.click(); } catch (e) {} }
+}
+
+// ── Звук ──
+class Sound {
+  constructor() { this.on = false; this.ctx = null; }
+  ensure() { if (this.ctx) return this.ctx; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = .5; this.master.connect(this.ctx.destination); return this.ctx; }
+  startAmbient() {
+    const c = this.ensure(); if (!c || this.amb) return;
+    const g = c.createGain(); g.gain.value = 0;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 320;
+    const o1 = c.createOscillator(); o1.type = 'sine'; o1.frequency.value = 55;
+    const o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = 82.4;
+    const lfo = c.createOscillator(); lfo.frequency.value = .07; const lg = c.createGain(); lg.gain.value = .016;
+    lfo.connect(lg); lg.connect(g.gain); o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(this.master);
+    o1.start(); o2.start(); lfo.start(); g.gain.linearRampToValueAtTime(.026, c.currentTime + 3);
+    this.amb = { g, o1, o2, lfo, lp };
+  }
+  tune(f) { if (!this.amb) return; try { this.amb.o1.frequency.value = f; this.amb.o2.frequency.value = f * 1.5; this.amb.lp.frequency.value = 240 + f * 2; } catch (e) {} }
+  stopAmbient() { if (!this.amb) return; const c = this.ctx, a = this.amb; this.amb = null; a.g.gain.cancelScheduledValues(c.currentTime); a.g.gain.linearRampToValueAtTime(0, c.currentTime + .4); setTimeout(() => { try { a.o1.stop(); a.o2.stop(); a.lfo.stop(); } catch (e) {} }, 600); }
+  blip(freq, dur, type, vol) {
+    if (!this.on) return; const c = this.ensure(); if (!c) return; if (c.state === 'suspended') c.resume();
+    const o = c.createOscillator(), g = c.createGain(); o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(vol || .1, c.currentTime + .012); g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + (dur || .16));
+    o.connect(g); g.connect(this.master); o.start(); o.stop(c.currentTime + (dur || .16) + .02);
+  }
+  slide(f1, f2, dur) {
+    if (!this.on) return; const c = this.ensure(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle';
+    o.frequency.setValueAtTime(f1, c.currentTime); o.frequency.exponentialRampToValueAtTime(f2, c.currentTime + dur);
+    g.gain.setValueAtTime(.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(.08, c.currentTime + .03); g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + dur);
+    o.connect(g); g.connect(this.master); o.start(); o.stop(c.currentTime + dur + .02);
+  }
+}
+const snd = new Sound();
+
+
+// ═══ Модель ═══
+// Думка (kind 't') — крапля. Зона (kind 'z') — клітина в межах рівня: члени мають group = id зони
+// і фізично не виходять за її коло. Зони вкладаються. Рівні («углиб») лишаються: parent = думка-власник рівня.
+const M = {
+  all: [], links: new Set(), linkMeta: new Map(), linkBorn: new Map(),
+  path: [], hist: [], redo: [],
+  get parentId() { return this.path.length ? this.path[this.path.length - 1] : null; },
+  level(pid) { return this.all.filter(n => (n.parent || null) === (pid || null)); },
+  get nodes() { return this.level(this.parentId).filter(n => !n.hidden); },     // видимі на рівні (думки + зони)
+  live() { return this.nodes.filter(n => !n.dying); },
+  leaves() { return this.nodes.filter(n => !n.dying && (n.kind !== 'z' || n.zc)); }, // що малюємо краплями
+  zones(open) { return this.nodes.filter(n => n.kind === 'z' && !n.dying && (!open || !n.zc)); },
+  members(zid) { return this.all.filter(n => n.group === zid && !n.dying); },
+  byId(id) { return this.all.find(n => n.id === id); },
+  key(a, b) { return a < b ? a + '|' + b : b + '|' + a; },
+  zoneDepth(n) { let d = 0, g = n.group; while (g) { d++; const z = this.byId(g); g = z ? z.group : null; if (d > 32) break; } return d; },
+  isAncestorZone(zid, n) { let g = n.group; while (g) { if (g === zid) return true; const z = this.byId(g); g = z ? z.group : null; } return false; },
+  // найглибша розгорнута зона, що містить точку
+  zoneAt(x, y, except) {
+    let best = null, bd = -1;
+    for (const z of this.zones(true)) { if (except && (z.id === except || this.isAncestorZone(except, z))) continue; if (hyp(x - z.x, y - z.y) < z.zr) { const d = this.zoneDepth(z); if (d > bd) { bd = d; best = z; } } }
+    return best;
+  },
+  // видимий представник: сам вузол або найближча згорнута зона-предок
+  vis(id) { let n = this.byId(id); if (!n) return null; let cur = n; let g = n.group; while (g) { const z = this.byId(g); if (!z) break; if (z.zc) cur = z; g = z.group; } return cur; },
+  _g: null, dirty() { this._g = null; },
+  get g() {
+    if (this._g) return this._g;
+    const deg = {}, kids = {}, adj = {};
+    for (const n of this.all) { if (n.parent) kids[n.parent] = (kids[n.parent] || 0) + 1; }
+    this.links.forEach(k => { const s = k.split('|'); deg[s[0]] = (deg[s[0]] || 0) + 1; deg[s[1]] = (deg[s[1]] || 0) + 1; (adj[s[0]] || (adj[s[0]] = [])).push(s[1]); (adj[s[1]] || (adj[s[1]] = [])).push(s[0]); });
+    const comp = {}; let c = 0;
+    for (const n of this.all) { if (comp[n.id] !== undefined) continue; const q = [n.id]; comp[n.id] = c; while (q.length) { const cur = q.pop(); for (const o of (adj[cur] || [])) if (comp[o] === undefined) { comp[o] = c; q.push(o); } } c++; }
+    return (this._g = { deg, kids, adj, comp });
+  },
+  deg(id) { return this.g.deg[id] || 0; },
+  kids(id) { return this.g.kids[id] || 0; },
+  sameComp(a, b) { const g = this.g; return g.comp[a] !== undefined && g.comp[a] === g.comp[b]; },
+  component(id) { const g = this.g, c = g.comp[id], out = new Set(); if (c === undefined) { out.add(id); return out; } for (const k in g.comp) if (g.comp[k] === c) out.add(k); return out; },
+  hydrate(n) {
+    return { id: String(n.id), parent: n.parent || null, kind: n.kind === 'z' ? 'z' : 't', group: n.group || null, zc: !!n.zc, x: +n.x, y: +n.y, text: String(n.text || ''), cat: n.cat || 0, created: n.created || Date.now(), touched: n.touched || Date.now(),
+      vx: 0, vy: 0, r: 16, zr: 60, alpha: 0, temp: 0, seed: Math.random() * 6.28, hidden: false, home: { x: +n.x, y: +n.y } };
+  },
+  // hidden = всередині згорнутої зони
+  refreshHidden() { for (const n of this.all) { let h = false, g = n.group; while (g) { const z = this.byId(g); if (!z) break; if (z.zc) { h = true; break; } g = z.group; } n.hidden = h; } },
+  snapshot() { this.hist.push(JSON.stringify(this.pack())); if (this.hist.length > 60) this.hist.shift(); this.redo.length = 0; },
+  pack() {
+    return { v: 3, nodes: this.all.filter(n => !n.dying).map(n => { const o = { id: n.id, parent: n.parent, x: Math.round(n.x), y: Math.round(n.y), text: n.text, cat: n.cat, created: n.created, touched: n.touched }; if (n.kind === 'z') { o.kind = 'z'; if (n.zc) o.zc = true; } if (n.group) o.group = n.group; return o; }),
+      links: [...this.links].map(k => { const m = this.linkMeta.get(k) || {}; return [k, m.k || 0, m.from || '']; }) };
+  },
+  unpack(d) {
+    const keep = new Map(this.all.map(n => [n.id, n]));
+    this.all = d.nodes.map(n => { const h = this.hydrate(n); const o = keep.get(h.id); if (o) { h.r = o.r; h.zr = o.zr; h.alpha = o.alpha; h.seed = o.seed; } return h; });
+    // міграція v2: згорнуті кластери по зв'язках → зони
+    if (!d.v || d.v < 3) {
+      for (const n of d.nodes) {
+        if (Array.isArray(n.collapsed) && n.collapsed.length) {
+          const owner = this.byId(String(n.id)); if (!owner) continue;
+          const members = n.collapsed.map(i => this.byId(String(i))).filter(Boolean).filter(m => (m.parent || null) === (owner.parent || null));
+          if (!members.length) continue;
+          const z = this.hydrate({ id: 'z' + owner.id, parent: owner.parent, kind: 'z', zc: true, x: owner.x, y: owner.y, text: owner.text, cat: owner.cat });
+          this.all.push(z); owner.group = z.id; members.forEach(m => { m.group = z.id; });
+        }
+      }
+    }
+    this.links = new Set(); this.linkMeta = new Map();
+    (d.links || []).forEach(e => { if (typeof e === 'string') this.links.add(e); else if (Array.isArray(e) && e[0]) { this.links.add(e[0]); this.linkMeta.set(e[0], { k: e[1] || 0, from: e[2] || '' }); } });
+    // осиротілі group → знімаємо
+    const ids = new Set(this.all.map(n => n.id)); for (const n of this.all) if (n.group && !ids.has(n.group)) n.group = null;
+    this.refreshHidden(); this.dirty();
+  },
+  save() { clearTimeout(this._st); this._st = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(this.pack())); } catch (e) {} }, 300); },
+  load(W, H) {
+    try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); if (d && Array.isArray(d.nodes) && d.nodes.length) { this.unpack(d); return true; } } } catch (e) {}
+    this.seed(W, H); return false;
+  },
+  seed(W, H) {
+    const cx = W / 2, cy = H / 2 - 20;
+    const root = [['Ядро задуму', 0, -20, 0], ['Дослідження', -220, -150, 3], ['Прототип', 210, -130, 2], ['Фідбек', 250, 130, 1], ['Метафора рідини', -250, 130, 2], ['Кластери тем', -10, 230, 0]];
+    this.all = root.map((s, i) => this.hydrate({ id: 's' + i, parent: null, x: cx + s[1], y: cy + s[2], text: s[0], cat: s[3] }));
+    this.all.push(this.hydrate({ id: 'z0', parent: null, kind: 'z', x: cx - 215, y: cy - 110, text: 'Відкриття', cat: 3 }));
+    this.byId('s1').group = 'z0';
+    [["Інтерв'ю", -300, -60], ['Гіпотези', -150, -60]].forEach((k, i) => this.all.push(this.hydrate({ id: 'z0k' + i, parent: null, group: 'z0', x: cx + k[1], y: cy + k[2], text: k[0], cat: 3 })));
+    [['Аналог-ринок', -60, 30], ['Опитування', 60, -30]].forEach((k, i) => this.all.push(this.hydrate({ id: 's1k' + i, parent: 's1', x: cx + k[1], y: cy + k[2], text: k[0], cat: 3 })));
+    this.links = new Set([this.key('s0', 's1'), this.key('s0', 's2'), this.key('s2', 's3'), this.key('z0k0', 'z0k1')]);
+    this.linkMeta = new Map(); this.refreshHidden(); this.dirty(); this.save();
+  }
+};
+
+// ═══ Стан застосунку ═══
+const S = {
+  W: 0, H: 0, dpr: 1,
+  sel: null, hover: null, editing: null, menu: null,
+  mode: 0,              // 0 рух · 1 нитка · 2 магніт
+  focus: false, search: '', trans: 1, zoomDir: 1, diveFrom: null, enteredAt: 0,
+  cursor: { x: -999, y: -999, tx: -999, ty: -999, r: 42, active: false },
+  trail: [], ripples: [], membranes: new Set(),
+  drag: null, thread: null, press: null, gather: false, linkHot: null, dropHot: null, dropT: 0,
+  view: { z: 1, px: 0, py: 0 },   // користувацький зум/пан рівня
+  viewAnim: null, diveHint: null,
+  clusters: [], clusterT: 0, lastT: 0, raf: 0,
+  air: 0, airArmed: false, airGrab: null, airThread: null,
+  labels: prefs.labels !== false, oneLink: null, dropReady: false, dropPhase: 0,
+  multi: new Set(), zoneLabels: [], zoneHot: null, leaveHot: null,
+};
+const bounds = () => mobile ? { l: 24, r: 24, t: 86, b: 150 } : { l: 48, r: 130, t: 70, b: 92 };
+const horizonAt = () => { const b = bounds(); return { x: S.W * .5, y: S.H - b.b - 48 }; };
+
+// ═══ Камера: вид користувача ∘ анімація пірнання ═══
+function proj() {
+  const t = S.trans, e = 1 - Math.pow(1 - t, 3);
+  if (S.zoomDir > 0) { const o = S.diveFrom || { x: S.W / 2, y: S.H / 2 }; return { s: .5 + .5 * e, cx: o.x * (1 - e) + S.W / 2 * e, cy: o.y * (1 - e) + S.H / 2 * e, pS: 1 + 1.5 * e, pA: 1 - e, e }; }
+  return { s: 1.9 - .9 * e, cx: S.W / 2, cy: S.H / 2, pS: .5 + .5 * e, pA: e, e };
+}
+// world (простір рівня) → screen
+function w2s(x, y, p) { p = p || proj(); const v = S.view; const vx = v.px + x * v.z, vy = v.py + y * v.z; return { x: p.cx + (vx - S.W / 2) * p.s, y: p.cy + (vy - S.H / 2) * p.s }; }
+function s2w(sx, sy, p) { p = p || proj(); const v = S.view; const vx = S.W / 2 + (sx - p.cx) / p.s, vy = S.H / 2 + (sy - p.cy) / p.s; return { x: (vx - v.px) / v.z, y: (vy - v.py) / v.z }; }
+function scaleNow() { return S.view.z * proj().s; }
+function clampView() {
+  const v = S.view;
+  if (v.z <= 1) { v.px = lerp(v.px, S.W / 2 * (1 - v.z), .5); v.py = lerp(v.py, S.H / 2 * (1 - v.z), .5); return; }
+  // при зумі > 1 не випускаємо полотно за екран
+  v.px = clamp(v.px, S.W * (1 - v.z), 0); v.py = clamp(v.py, S.H * (1 - v.z), 0);
+}
+function zoomAt(f, sx, sy) { // масштабуємо навколо екранної точки
+  const v = S.view, p = proj();
+  const w = s2w(sx, sy, p);
+  v.z = clamp(v.z * f, .45, 3.2);
+  const vx = S.W / 2 + (sx - p.cx) / p.s, vy = S.H / 2 + (sy - p.cy) / p.s;
+  v.px = vx - w.x * v.z; v.py = vy - w.y * v.z;
+}
+function animateView(z, px, py, ms, done) { S.viewAnim = { from: { ...S.view }, to: { z, px, py }, t0: now(), ms: ms || 320, done }; }
+function resetView() { S.view = { z: 1, px: 0, py: 0 }; S.viewAnim = null; }
+function stepView() {
+  const a = S.viewAnim; if (!a) return;
+  const t = clamp((now() - a.t0) / a.ms, 0, 1), e = 1 - Math.pow(1 - t, 3);
+  S.view.z = lerp(a.from.z, a.to.z, e); S.view.px = lerp(a.from.px, a.to.px, e); S.view.py = lerp(a.from.py, a.to.py, e);
+  if (t >= 1) { S.viewAnim = null; if (a.done) a.done(); }
+}
+// семантика зуму: після жесту вирішуємо — пірнути, виринути чи повернутись
+function settleZoom(fx, fy) {
+  const v = S.view;
+  if (v.z >= 2.05) {
+    const w = s2w(fx, fy);
+    const n = nearestNode(w.x, w.y, 160 / v.z);
+    if (n) { animateView(v.z * 1.3, v.px - (fx - S.W / 2) * .3 * 0 , v.py, 140, null); S.viewAnim = null; resetView(); A.deeper(n.id); return; }
+  }
+  if (v.z <= .62 && M.path.length) { resetView(); A.shallower(); return; }
+  if (v.z < 1.12) animateView(1, 0, 0, 300);
+  else { const z = v.z, px = clamp(v.px, S.W * (1 - z), 0), py = clamp(v.py, S.H * (1 - z), 0); if (px !== v.px || py !== v.py) animateView(z, px, py, 220); }
+  S.diveHint = null;
+}
+function liveZoomHint(fx, fy) {
+  const v = S.view;
+  let h = null;
+  if (v.z >= 2.05) { const w = s2w(fx, fy); const n = nearestNode(w.x, w.y, 160 / v.z); if (n) h = { kind: 'dive', id: n.id }; }
+  else if (v.z <= .62 && M.path.length) h = { kind: 'up' };
+  const was = S.diveHint && S.diveHint.kind + (S.diveHint.id || '');
+  const is = h && h.kind + (h.id || '');
+  if (was !== is) { S.diveHint = h; if (h) buzz(12); UI.hint(); }
+}
+function nearestNode(x, y, maxD) { let best = null, bd = maxD || 1e9; for (const n of M.leaves()) { if (n.kind === 'z') continue; const d = hyp(x - n.x, y - n.y) - n.r; if (d < bd) { bd = d; best = n; } } return best; }
+function pick(x, y) { const N = M.leaves(); const pad = 10 / Math.max(.5, scaleNow()); for (let i = N.length - 1; i >= 0; i--) { const n = N[i]; if (!n.dying && hyp(x - n.x, y - n.y) < n.r + pad) return n; } return null; }
+function pickLink(x, y) {
+  const byId = {}; for (const n of M.leaves()) byId[n.id] = n;
+  let best = null, bd = 16 / Math.max(.5, scaleNow());
+  M.links.forEach(k => { const s = k.split('|'); const va = M.vis(s[0]), vb = M.vis(s[1]); const a = va && byId[va.id], b = vb && byId[vb.id]; if (!a || !b || a === b) return; const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy; if (!L2) return; const t = clamp(((x - a.x) * dx + (y - a.y) * dy) / L2, .15, .85); const d = hyp(x - (a.x + dx * t), y - (a.y + dy * t)); if (d < bd) { bd = d; best = { key: k, a, b }; } });
+  return best;
+}
+// зона кільця вибраної думки (звідти тягнемо нитку)
+function onRing(x, y) { if (!S.sel) return false; const n = M.byId(S.sel); if (!n || n.dying) return false; const d = hyp(x - n.x, y - n.y); const k = 1 / Math.max(.6, scaleNow()); return d > n.r + 6 * k && d < n.r + 34 * k; }
+
+
+// підпис зони (екранні координати) — за нього зону беруть, тапають, тягнуть
+function pickZoneLabel(sx, sy) { for (const r of S.zoneLabels) { if (sx >= r.x - 6 && sx <= r.x + r.w + 6 && sy >= r.y - 8 && sy <= r.y + r.h + 8) return M.byId(r.id); } return null; }
+
+
+// ═══ Дії ═══
+const uid = p => (p || 'n') + Date.now().toString(36) + Math.floor(Math.random() * 999);
+const nameOf = n => (n && n.text) ? n.text.slice(0, 18) : (n && n.kind === 'z' ? 'група' : 'без назви');
+const A = {
+  undo() { const s = M.hist.pop(); if (!s) { UI.toast('Нічого скасовувати'); return; } M.redo.push(JSON.stringify(M.pack())); M.unpack(JSON.parse(s)); S.sel = null; S.menu = null; S.editing = null; S.multi.clear(); M.save(); snd.blip(220, .12, 'triangle', .07); UI.toast('Крок назад'); UI.sync(); },
+  redo() { const s = M.redo.pop(); if (!s) { UI.toast('Нічого повторювати'); return; } M.hist.push(JSON.stringify(M.pack())); M.unpack(JSON.parse(s)); S.sel = null; S.menu = null; S.multi.clear(); M.save(); snd.blip(330, .12, 'triangle', .07); UI.toast('Крок вперед'); UI.sync(); },
+  // ── створення ──
+  create(pos, edit, fromId, groupId) {
+    M.snapshot();
+    const n = M.hydrate({ id: uid(), parent: M.parentId, x: pos.x, y: pos.y, text: '', cat: 0 });
+    n.r = 4; const src = fromId ? M.byId(fromId) : null;
+    const z = groupId !== undefined ? groupId : (src ? src.group : (M.zoneAt(pos.x, pos.y) || {}).id || null);
+    n.group = z || null;
+    if (src) {
+      const a = Math.random() * Math.PI * 2;
+      if (pos.exact) { n.x = pos.x; n.y = pos.y; } else { n.x = src.x + Math.cos(a) * (src.r + 46); n.y = src.y + Math.sin(a) * (src.r + 46); }
+      n.cat = src.cat; n.home = { x: n.x, y: n.y };
+      M.all.push(n); const k = M.key(src.id, n.id); M.links.add(k); M.linkMeta.set(k, { k: 0, from: src.id }); M.linkBorn.set(k, now() / 1000);
+      snd.blip(300, .18, 'sine', .07); setTimeout(() => snd.blip(620, .12, 'sine', .06), 110);
+      UI.toast('Поділ від «' + nameOf(src) + '»');
+    } else { M.all.push(n); snd.blip(560, .14, 'sine', .09); if (n.group) UI.toast('Нова думка в «' + nameOf(M.byId(n.group)) + '»'); }
+    M.dirty(); buzz(12); M.save(); UI.sync();
+    if (edit) A.startEdit(n); return n;
+  },
+  newThought() { const b = bounds(); const w = s2w(S.W / 2, (b.t + S.H - b.b) / 2); const src = S.sel ? M.byId(S.sel) : null; if (src && src.kind === 'z') { A.create({ x: src.x + (Math.random() - .5) * 40, y: src.y + (Math.random() - .5) * 40 }, true, null, src.id); return; } A.create({ x: w.x + (Math.random() - .5) * 120, y: w.y + (Math.random() - .5) * 120 }, true, S.sel || null); },
+  // ── видалення ──
+  remove(id, quiet) {
+    const n0 = M.byId(id); if (!n0) return; M.snapshot();
+    const kill = new Set([id]); let grew = true;
+    while (grew) { grew = false; for (const n of M.all) if (!kill.has(n.id) && ((n.parent && kill.has(n.parent)) || (n.group && kill.has(n.group)))) { kill.add(n.id); grew = true; } }
+    M.all.forEach(n => { if (kill.has(n.id)) n.dying = true; });
+    M.links = new Set([...M.links].filter(k => { const s = k.split('|'); return !kill.has(s[0]) && !kill.has(s[1]); }));
+    if (S.sel === id) S.sel = null; if (S.hover === id) S.hover = null; S.menu = null; kill.forEach(i => S.multi.delete(i)); M.dirty();
+    snd.blip(170, .2, 'sawtooth', .06); buzz([8, 26, 8]); M.save(); UI.sync();
+    if (!quiet) UI.toast(kill.size > 1 ? 'Видалено разом із вмістом: ' + kill.size : 'Видалено «' + nameOf(n0) + '»', true);
+  },
+  // ── зони ──
+  group(ids) {
+    const members = ids.map(i => M.byId(i)).filter(n => n && !n.dying && (n.parent || null) === (M.parentId || null));
+    if (members.length < 1) return null;
+    // нова зона живе там, де живе більшість членів; члени, що лежать у чужих зонах, виходять із них
+    const g0 = members[0].group || null; const common = members.every(m => (m.group || null) === g0) ? g0 : null;
+    M.snapshot();
+    const cx = members.reduce((s, m) => s + m.x, 0) / members.length, cy = members.reduce((s, m) => s + m.y, 0) / members.length;
+    const z = M.hydrate({ id: uid('z'), parent: M.parentId, kind: 'z', x: cx, y: cy, text: '', cat: members[0].cat, group: common });
+    z.zr = 40; M.all.push(z);
+    members.forEach(m => { m.group = z.id; });
+    S.multi.clear(); S.mode = 0; S.sel = z.id; M.dirty(); M.save(); buzz([10, 20, 10]); snd.slide(300, 560, .3); UI.sync();
+    UI.toast('Група з ' + members.length + ' ' + plural(members.length, ['думки', 'думок', 'думок']) + ' — дай їй назву');
+    A.startEdit(z); return z;
+  },
+  ungroup(zid) {
+    const z = M.byId(zid); if (!z || z.kind !== 'z') return; M.snapshot();
+    const ms = M.members(zid); ms.forEach(m => { m.group = z.group || null; });
+    z.dying = true; if (S.sel === zid) S.sel = null; S.menu = null; M.refreshHidden(); M.dirty(); M.save(); snd.slide(500, 260, .3); buzz(12); UI.sync();
+    UI.toast('Групу розпущено, ' + ms.length + ' ' + plural(ms.length, ['думка', 'думки', 'думок']) + ' на волі', true);
+  },
+  join(id, zid) {
+    const n = M.byId(id), z = M.byId(zid); if (!n || !z || z.kind !== 'z' || n.group === zid) return;
+    if (n.kind === 'z' && (n.id === zid || M.isAncestorZone(n.id, z))) return; // не можна класти зону в саму себе
+    M.snapshot(); n.group = zid; n.home = { x: n.x, y: n.y }; M.dirty(); M.save(); buzz([8, 18]); snd.blip(520, .12, 'sine', .07); UI.sync();
+    UI.toast('«' + nameOf(n) + '» → у «' + nameOf(z) + '»', true);
+  },
+  leave(id) {
+    const n = M.byId(id); if (!n || !n.group) return; const z = M.byId(n.group); M.snapshot();
+    n.group = z ? (z.group || null) : null; n.home = { x: n.x, y: n.y }; M.dirty(); M.save(); buzz(10); snd.blip(380, .12, 'sine', .06); UI.sync();
+    UI.toast('«' + nameOf(n) + '» вийшла з «' + nameOf(z) + '»', true);
+  },
+  toggleZone(zid) {
+    const z = M.byId(zid); if (!z || z.kind !== 'z') return; M.snapshot(); z.zc = !z.zc; M.refreshHidden(); M.dirty();
+    if (z.zc) { const ms = M.members(zid); snd.slide(560, 240, .3); UI.toast('Згорнуто «' + nameOf(z) + '» · ' + ms.length); }
+    else { // розгортаємо — члени, що лишились далеко, підтягуємо
+      const ms = M.members(zid); ms.forEach((m, i) => { if (hyp(m.x - z.x, m.y - z.y) > z.zr) { const a = (i / ms.length) * Math.PI * 2; m.x = z.x + Math.cos(a) * 30; m.y = z.y + Math.sin(a) * 30; m.home = { x: m.x, y: m.y }; } });
+      snd.slide(240, 560, .3); UI.toast('Розгорнуто «' + nameOf(z) + '»');
+    }
+    S.menu = null; buzz(14); M.save(); UI.sync();
+  },
+  expandAll() { const zs = M.all.filter(n => n.kind === 'z' && n.zc); if (!zs.length) { UI.toast('Нічого не згорнуто'); return; } M.snapshot(); zs.forEach(z => { z.zc = false; }); M.refreshHidden(); M.dirty(); snd.slide(240, 600, .32); M.save(); UI.sync(); UI.toast('Розгорнуто все'); },
+  // ── злиття ──
+  merge(ids, targetId) {
+    const t = M.byId(targetId); const others = ids.filter(i => i !== targetId).map(i => M.byId(i)).filter(n => n && !n.dying);
+    if (!t || !others.length) return;
+    if (t.kind === 'z' || others.some(o => o.kind === 'z')) { UI.toast('Зони не зливаються — розпусти або згрупуй'); return; }
+    M.snapshot();
+    const parts = [t.text].concat(others.map(o => o.text)).filter(Boolean); t.text = parts.join(' · '); t.touched = Date.now();
+    for (const o of others) {
+      for (const n of M.all) { if (n.parent === o.id) n.parent = t.id; if (n.group === o.id) n.group = t.group; }
+      [...M.links].forEach(k => { const s = k.split('|'); if (s[0] !== o.id && s[1] !== o.id) return; const other = s[0] === o.id ? s[1] : s[0]; M.links.delete(k); const meta = M.linkMeta.get(k); M.linkMeta.delete(k); if (other !== t.id) { const nk = M.key(t.id, other); M.links.add(nk); M.linkMeta.set(nk, { k: meta ? meta.k : 0, from: meta && meta.from === o.id ? t.id : other }); } });
+      o.dying = true;
+    }
+    S.multi.clear(); S.mode = 0; S.sel = t.id; S.menu = null; M.dirty(); M.save(); buzz([12, 30, 12]); snd.slide(300, 700, .4); UI.sync();
+    UI.toast('Злито в «' + nameOf(t) + '»', true);
+  },
+  // ── зв'язки ──
+  toggleLink(a, b) {
+    if (a === b) return; M.snapshot(); const k = M.key(a, b);
+    if (M.links.has(k)) { M.links.delete(k); snd.blip(300, .12, 'sine', .06); UI.toast("Зв'язок прибрано", true); }
+    else { M.links.add(k); M.linkMeta.set(k, { k: 0, from: a }); M.linkBorn.set(k, now() / 1000); snd.blip(660, .1, 'sine', .08); setTimeout(() => snd.blip(880, .12, 'sine', .06), 70); UI.toast("Зв'язок утворено"); }
+    M.dirty(); buzz(14); M.save(); UI.sync();
+  },
+  cycleCat(id) { M.snapshot(); const n = M.byId(id); if (n) { n.cat = (n.cat + 1) % CATS.length; n.touched = Date.now(); UI.toast('Тема: ' + CAT_NAMES[n.cat]); } snd.blip(420, .1, 'triangle', .06); buzz(8); M.save(); },
+  setCat(id, c) { M.snapshot(); const n = M.byId(id); if (n) { n.cat = c; n.touched = Date.now(); } snd.blip(420, .1, 'triangle', .06); buzz(8); M.save(); },
+  cycleLinkKind(hit) { const cur = M.linkMeta.get(hit.key) || { k: 0, from: hit.a.id }; const nk = (cur.k + 1) % LINK_KINDS.length; M.linkMeta.set(hit.key, { k: nk, from: cur.from || hit.a.id }); M.linkBorn.set(hit.key, now() / 1000); snd.blip(360 + nk * 90, .1, 'triangle', .06); buzz(10); M.save(); UI.toast("Зв'язок: " + LINK_KINDS[nk]); },
+  cycleSel(dir) { const N = M.leaves(); if (!N.length) return; const i = N.findIndex(n => n.id === S.sel); const nx = N[((i + dir) % N.length + N.length) % N.length]; S.sel = nx.id; S.menu = null; S.hover = nx.id; snd.blip(480, .06, 'sine', .04); UI.sync(); },
+  // ── мультивибір ──
+  toggleMulti(id) { if (S.multi.has(id)) S.multi.delete(id); else S.multi.add(id); buzz(6); snd.blip(S.multi.has(id) ? 560 : 400, .06, 'sine', .05); UI.sync(); },
+  selectMode(on, seedId) { S.mode = on ? 3 : 0; if (!on) S.multi.clear(); else if (seedId) S.multi.add(seedId); S.menu = null; UI.sync(); },
+  // ── текст ──
+  startEdit(n) { if (!n) return; S.sel = n.id; S.editing = n.id; S.menu = null; S.hover = null; UI.openEditor(n); },
+  commitEdit(text) {
+    const id = S.editing; if (!id) return; const n = M.byId(id); const t = (text === undefined ? UI.editValue() : text).trim();
+    if (n) { if (t) { if (t !== n.text) M.snapshot(); n.text = t; n.touched = Date.now(); } else if (n.kind !== 'z') A.remove(id, true); }
+    S.editing = null; UI.closeEditor(); M.save(); UI.sync();
+  },
+  cancelEdit() { const id = S.editing; const n = M.byId(id); S.editing = null; UI.closeEditor(); if (n && !n.text && n.kind !== 'z') A.remove(id, true); UI.sync(); },
+  // ── порядок ──
+  tidy() {
+    const N = M.live(); if (!N.length) return; M.snapshot();
+    const b = bounds(); const cx = (b.l + S.W - b.r) / 2, cy = (b.t + S.H - b.b) / 2;
+    const place = (items, ox, oy, R) => { if (items.length === 1) { items[0].x = ox; items[0].y = oy; } else items.forEach((n, i) => { const a = (i / items.length) * Math.PI * 2 - Math.PI / 2; n.x = ox + Math.cos(a) * R; n.y = oy + Math.sin(a) * R * .85; }); items.forEach(n => { n.home = { x: n.x, y: n.y }; n.vx = n.vy = 0; }); };
+    const arrange = (gid, ox, oy, R) => {
+      const items = N.filter(n => (n.group || null) === gid); if (!items.length) return;
+      place(items, ox, oy, R);
+      for (const z of items) if (z.kind === 'z' && !z.zc) { const ms = N.filter(n => n.group === z.id); const rr = Math.max(26, 18 + ms.length * 10); arrange(z.id, z.x, z.y, rr); z.zr = rr + 44; }
+    };
+    const roots = N.filter(n => !n.group || !M.byId(n.group));
+    const R = Math.min((S.W - b.l - b.r) * .36, (S.H - b.t - b.b) * .36) * (roots.length > 6 ? 1 : .85);
+    arrange(null, cx, cy, R);
+    snd.slide(300, 520, .3); buzz(14); M.save(); UI.toast('Впорядковано');
+  },
+  fly(dir) { S.trans = 0; S.zoomDir = dir; },
+  deeper(fromId) {
+    const target = fromId || S.hover || S.sel; const n = target ? M.nodes.find(x => x.id === target) : null;
+    if (!n || n.kind === 'z') { UI.toast(n ? 'Углиб ідуть думки, не групи' : 'Вибери думку, щоб зайти в неї'); return; }
+    if (S.editing) A.commitEdit();
+    S.sel = null; S.menu = null; S.hover = null; S.multi.clear(); S.mode = S.mode === 3 ? 0 : S.mode; S.diveFrom = w2s(n.x, n.y); resetView(); A.fly(1);
+    snd.slide(330, 660, .45); buzz(16); S.enteredAt = now();
+    M.path.push(n.id); try { history.pushState({ depth: M.path.length }, ''); } catch (e) {}
+    UI.sync(); UI.toast('Углиб: ' + nameOf(n));
+  },
+  shallower(viaHistory) {
+    if (!M.path.length) return; if (S.editing) A.commitEdit();
+    M.path.pop(); S.sel = null; S.menu = null; S.hover = null; S.multi.clear(); S.diveFrom = null; resetView(); A.fly(-1);
+    snd.slide(660, 330, .45); buzz(10);
+    if (!viaHistory) { try { if (history.state && history.state.depth > M.path.length) history.back(); } catch (e) {} }
+    UI.sync();
+  },
+  goDepth(idx) { if (idx < 0 || idx >= M.path.length) return; while (M.path.length > idx) A.shallower(); },
+  clearAll() { if (!confirm('Стерти все полотно? «Крок назад» поверне.')) return; M.snapshot(); M.all = []; M.links = new Set(); M.linkMeta = new Map(); M.path = []; S.sel = null; S.multi.clear(); M.dirty(); M.save(); UI.sync(); UI.toast('Полотно чисте', true); },
+  exportPng() {
+    const off = document.createElement('canvas'); off.width = S.W * S.dpr; off.height = S.H * S.dpr; const o = off.getContext('2d');
+    o.fillStyle = '#0d1209'; o.fillRect(0, 0, off.width, off.height);
+    try { o.drawImage($('#gl'), 0, 0, off.width, off.height); } catch (e) {}
+    o.drawImage($('#fx'), 0, 0);
+    off.toBlob(b => UI.share(b, 'mind-' + Date.now().toString(36) + '.png', 'PNG збережено'), 'image/png');
+  },
+  exportMd() {
+    const lines = [];
+    const walkGroup = (pid, gid, d) => {
+      for (const n of M.all.filter(n => (n.parent || null) === pid && (n.group || null) === gid)) {
+        const linked = M.all.filter(x => M.links.has(M.key(n.id, x.id))).map(x => x.text || '—');
+        lines.push('  '.repeat(d) + '- ' + (n.kind === 'z' ? '**' + (n.text || 'група') + '**' : (n.text || 'без назви')) + (n.cat ? ' [' + CAT_NAMES[n.cat] + ']' : '') + (linked.length ? '  ↔ ' + linked.join(', ') : ''));
+        if (n.kind === 'z') walkGroup(pid, n.id, d + 1); else walkGroup(n.id, null, d + 1);
+      }
+    };
+    walkGroup(null, null, 0);
+    UI.share(new Blob(['# MiND — канвас мислення\n\n' + lines.join('\n') + '\n'], { type: 'text/markdown' }), 'mind.md', 'Структуру збережено');
+  },
+  exportJson() { UI.share(new Blob([JSON.stringify({ app: 'MiND', ...M.pack() }, null, 1)], { type: 'application/json' }), 'mind.json', 'JSON збережено'); },
+  importJson(file) { const rd = new FileReader(); rd.onload = () => { try { const d = JSON.parse(rd.result); if (!d || !Array.isArray(d.nodes)) throw 0; M.snapshot(); M.unpack(d); M.path = []; S.sel = null; M.save(); UI.sync(); UI.toast('Імпортовано ' + d.nodes.length + ' ' + plural(d.nodes.length, ['думку', 'думки', 'думок']), true); } catch (e) { UI.toast('Це не файл MiND'); } }; rd.readAsText(file); }
+};
+
+// ═══ Фізика: думки стоять де поставили; члени не виходять із зони; зони-сусіди не перекриваються ═══
+function nearPairs(list, maxD) {
+  const cell = Math.max(48, maxD), grid = new Map(), out = [];
+  for (let i = 0; i < list.length; i++) { const k = Math.floor(list[i].x / cell) + ',' + Math.floor(list[i].y / cell); let a = grid.get(k); if (!a) { a = []; grid.set(k, a); } a.push(i); }
+  const offs = [[0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+  grid.forEach((idx, k) => { const c = k.split(',').map(Number); for (const o of offs) { const other = o[0] === 0 && o[1] === 0 ? idx : grid.get((c[0] + o[0]) + ',' + (c[1] + o[1])); if (!other) continue; for (let a = 0; a < idx.length; a++) for (let b = other === idx ? a + 1 : 0; b < other.length; b++) { const p = list[idx[a]], q = list[other[b]]; if (hyp(q.x - p.x, q.y - p.y) <= maxD) out.push([p, q]); } } });
+  return out;
+}
+const PH = { mergeD: 200, fuse: 1.25, decayDays: 14, drift: .22 };
+function alphaOf(n, nowMs) {
+  if (n.dying) return 0; let a = 1; const days = PH.decayDays; const age = (nowMs - (n.touched || nowMs)) / 86400000;
+  if (days > 0 && age > days) a *= Math.max(.32, 1 - (age - days) / (days * 2));
+  const q = S.search.trim().toLowerCase(); if (q) a *= (n.text || '').toLowerCase().includes(q) ? 1 : .16;
+  if (S.focus && S.sel) a *= M.sameComp(S.sel, n.id) || S.sel === n.id || n.group === S.sel ? 1 : .14;
+  if (S.mode === 3 && S.multi.size) a *= S.multi.has(n.id) ? 1 : .45;
+  return a;
+}
+// радіус краплі (думка або згорнута зона)
+function targetR(n, g) {
+  if (n.kind === 'z') return Math.min(80, 30 + M.members(n.id).length * 3);
+  let t = Math.min(24 + 6.5 * (g.deg[n.id] || 0) + 3 * Math.min(4, g.kids[n.id] || 0), 60);
+  if (n.cat === 5) t *= .72; return t;
+}
+function step(dt, t) {
+  const micro = M.path.length, nowMs = Date.now(), g = M.g;
+  S.trans = Math.min(1, S.trans + .02 * dt);
+  stepView(); clampView();
+  const c = S.cursor; c.x += (c.tx - c.x) * Math.min(1, .3 * dt); c.y += (c.ty - c.y) * Math.min(1, .3 * dt);
+  const gathering = S.gather || S.mode === 2; c.r += ((gathering ? 58 : 42) - c.r) * .15;
+  if (c.active) { S.trail.push({ x: c.x, y: c.y, a: 1 }); if (S.trail.length > 22) S.trail.shift(); }
+  S.trail.forEach(p => { p.a *= Math.pow(.9, dt); });
+  S.ripples.forEach(r => { r.t += .045 * dt; }); S.ripples = S.ripples.filter(r => r.t < 1);
+  for (let i = M.all.length - 1; i >= 0; i--) { const n = M.all[i]; if (n.dying) { n.alpha -= .09 * dt; if (n.alpha <= 0) { M.all.splice(i, 1); M.dirty(); } } }
+  snd.tune(55 * Math.pow(1.3, micro));
+  const held = S.drag ? S.drag.id : S.airGrab;
+  const N = M.live(), days = PH.decayDays;
+  const leaves = N.filter(n => n.kind !== 'z' || n.zc), zones = N.filter(n => n.kind === 'z' && !n.zc);
+  const byId = {}; for (const n of N) byId[n.id] = n;
+  // розміри
+  for (const n of leaves) {
+    n.temp = days > 0 ? clamp(((nowMs - (n.touched || nowMs)) / 86400000) / (days * 1.5), 0, 1) : 0;
+    const quantum = n.text || n.kind === 'z' ? 0 : (.5 + .5 * Math.sin(t * .02 + n.seed)) * .15;
+    const pulse = 1 + Math.sin(t * .0016 + n.seed) * .03 * (1 - .7 * n.temp) - quantum;
+    n.r += (targetR(n, g) * pulse - n.r) * .1;
+    n.alpha += (alphaOf(n, nowMs) * (1 - quantum * 1.5) - n.alpha) * .12;
+  }
+  // зони: радіус = обгортка членів; центр повільно йде до центроїда (крім перетягу)
+  const zoneRadius = z => { const ms = N.filter(n => n.group === z.id && n.id !== held); let R = 34; for (const m of ms) { const rr = (m.kind === 'z' && !m.zc) ? m.zr : m.r; R = Math.max(R, hyp(m.x - z.x, m.y - z.y) + rr + 22); } return Math.min(R, Math.max(S.W, S.H)); };
+  zones.sort((a, b) => M.zoneDepth(b) - M.zoneDepth(a)); // глибші першими — їхній радіус потрібен батькам
+  for (const z of zones) {
+    z.alpha += (alphaOf(z, nowMs) - z.alpha) * .12; z.r += (26 - z.r) * .1;
+    const ms = N.filter(n => n.group === z.id && n.id !== held);
+    const tr = ms.length ? zoneRadius(z) : 44; z.zr += (tr - z.zr) * (z.zr < tr ? .25 : .06);
+    if (ms.length && held !== z.id && !(S.drag && S.drag.zone === z.id)) { const cx = ms.reduce((s, m) => s + m.x, 0) / ms.length, cy = ms.reduce((s, m) => s + m.y, 0) / ms.length; z.x += (cx - z.x) * .05 * dt; z.y += (cy - z.y) * .05 * dt; }
+  }
+  // сили між краплями-сусідами (одна група) і між краплею та чужою зоною
+  const pairs = nearPairs(leaves, Math.max(PH.mergeD, 200)); const live = new Set();
+  for (const [a, b] of pairs) {
+    if ((a.group || null) !== (b.group || null)) continue;
+    if (held && (a.id === held || b.id === held)) continue;
+    const dx = b.x - a.x, dy = b.y - a.y; const d = hyp(dx, dy) || .01; const nx = dx / d, ny = dy / d; const minSep = a.r + b.r + 24;
+    if (d < minSep) { const f = (minSep - d) * .025 * dt; a.vx -= nx * f; a.vy -= ny * f; b.vx += nx * f; b.vy += ny * f; }
+    if (d < (a.r + b.r) * PH.fuse) { const k = M.key(a.id, b.id); live.add(k); if (!S.membranes.has(k) && S.ripples.length < 12) { S.ripples.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, t: 0, r0: (a.r + b.r) * .55 }); snd.blip(300 + Math.min(300, (a.r + b.r) * 2), .12, 'sine', .04); } }
+  }
+  S.membranes = live;
+  const b = bounds(), hz = horizonAt(); const amp = 3 + 9 * PH.drift;
+  const outsideZone = (n, z) => { // виштовхуємо n із чужої зони z
+    const rr = (n.kind === 'z' && !n.zc) ? n.zr : n.r; const dx = n.x - z.x, dy = n.y - z.y; const d = hyp(dx, dy) || .01; const want = z.zr + rr + 10;
+    if (d < want) { const f = (want - d) * .06 * dt; n.vx += dx / d * f; n.vy += dy / d * f; if (n.home) { n.home.x += dx / d * f * 3; n.home.y += dy / d * f * 3; } if (n.kind === 'z') for (const m of N) if (M.isAncestorZone(n.id, m)) { m.x += dx / d * f; m.y += dy / d * f; if (m.home) { m.home.x += dx / d * f * 3; m.home.y += dy / d * f * 3; } } }
+  };
+  for (const n of N) {
+    if (n.kind === 'z' && !n.zc) { // зони відштовхуються від сусідів-зон тієї ж групи; від чужих крапель — через outsideZone нижче
+      for (const o of zones) { if (o === n || (o.group || null) !== (n.group || null)) continue; if (held === n.id) continue; const dx = n.x - o.x, dy = n.y - o.y; const d = hyp(dx, dy) || .01; const want = n.zr + o.zr + 12; if (d < want) { const f = (want - d) * .04 * dt; const mx = dx / d * f, my = dy / d * f; n.x += mx; n.y += my; for (const m of N) if (M.isAncestorZone(n.id, m)) { m.x += mx; m.y += my; if (m.home) { m.home.x += mx; m.home.y += my; } } } }
+      continue;
+    }
+    if (held === n.id) continue;
+    if (!n.home) n.home = { x: n.x, y: n.y };
+    let tx = n.home.x, ty = n.home.y, k = .018;
+    const jit = 1 + Math.min(3, micro) * .5;
+    tx += Math.cos(t * .00055 + n.seed) * amp * jit; ty += Math.sin(t * .00071 + n.seed * 1.7) * amp * jit;
+    if (n.cat === 5 && !n.group) { const dx = hz.x - n.x, dy = hz.y - n.y, d = hyp(dx, dy) || 1; tx = n.x + dx / d * 30; ty = n.y + dy / d * 30; k = .05; if (d < 42) { n.r *= .985; if (n.r < 7 && !n.dying) { n.dying = true; M.dirty(); UI.toast('Розчинилось у горизонті'); M.save(); } } }
+    if (gathering && c.active && (n.group || null) === ((M.zoneAt(c.x, c.y) || {}).id || null)) { const d = hyp(c.x - n.x, c.y - n.y) || 1; if (d < PH.mergeD * 1.8 && d > c.r + n.r - 12) { tx = c.x; ty = c.y; k = .05; } }
+    // своя зона: тримаємось усередині; чужі зони — зовні
+    const z = n.group ? byId[n.group] : null;
+    if (z && !z.zc) { const dx = n.x - z.x, dy = n.y - z.y; const d = hyp(dx, dy) || .01; const lim = Math.max(6, z.zr - n.r - 10); if (d > lim) { const f = (d - lim) * .12 * dt; n.vx -= dx / d * f; n.vy -= dy / d * f; n.home.x = z.x + dx / d * Math.min(d, lim); n.home.y = z.y + dy / d * Math.min(d, lim); } }
+    for (const o of zones) { if (o.id === n.group || o === n) continue; if (M.isAncestorZone(o.id, n)) continue; if (hyp(n.x - o.x, n.y - o.y) < o.zr + n.r + 60) outsideZone(n, o); }
+    tx = clamp(tx, b.l + n.r, S.W - b.r - n.r); ty = clamp(ty, b.t + n.r, S.H - b.b - n.r);
+    n.vx += (tx - n.x) * k * dt; n.vy += (ty - n.y) * k * dt;
+    const damp = Math.pow(.84, dt); n.vx *= damp; n.vy *= damp;
+    const sp = hyp(n.vx, n.vy); if (sp > 6) { n.vx = n.vx / sp * 6; n.vy = n.vy / sp * 6; }
+    n.x += n.vx * dt; n.y += n.vy * dt;
+  }
+  for (const z of zones) { z.x = clamp(z.x, b.l + 20, S.W - b.r - 20); z.y = clamp(z.y, b.t + 30, S.H - b.b - 20); }
+}
+function fitToView() {
+  const bb = bounds(); const pads = { l: bb.l + 30, r: bb.r + 20, t: bb.t + 20, b: bb.b + 20 }; const byLevel = new Map();
+  for (const n of M.all) { const k = n.parent || '@root'; let a = byLevel.get(k); if (!a) { a = []; byLevel.set(k, a); } a.push(n); }
+  byLevel.forEach(list => {
+    const xs = list.map(n => n.x), ys = list.map(n => n.y); const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const availW = S.W - pads.l - pads.r, availH = S.H - pads.t - pads.b; if (availW < 100 || availH < 100) return;
+    const s = Math.min(1, availW / Math.max(1, maxX - minX), availH / Math.max(1, maxY - minY));
+    if (minX > pads.l && maxX < S.W - pads.r && minY > pads.t && maxY < S.H - pads.b && s >= 1) return;
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2, tx = pads.l + availW / 2, ty = pads.t + availH / 2;
+    list.forEach(n => { n.x = tx + (n.x - cx) * s; n.y = ty + (n.y - cy) * s; n.home = { x: n.x, y: n.y }; n.vx = n.vy = 0; });
+  });
+  M.save();
+}
+function recluster() { M.refreshHidden(); }
+window.MIND = { M, S, A, PH, proj, w2s, s2w, pick, prefs };
+
+
+// ═══ WebGL2: метаболи як поле впливу + поріг у шейдері ═══
+// Крок 1: кожна думка — квадрат з поліноміальним спадом (1-d²)², адитивно в FBO (півроздільність).
+// Крок 2: повноекранний прохід: smoothstep по сумі → гель; колір = зважене середнє; зерно; свічення курсора.
+const GL = (() => {
+  const cv = $('#gl');
+  const gl = cv.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true, powerPreference: 'high-performance' });
+  if (!gl) return null;
+  const K = 1.45, T = Math.pow(1 - 1 / (K * K), 2);          // поріг ізольованої краплі = її реальний радіус
+  const KB = 3.2, TB = .16;                                   // тло: ширший вплив, нижчий поріг → м'які плями
+  let half = false, scaleW = 1;
+  const extF = gl.getExtension('EXT_color_buffer_float'), extH = gl.getExtension('EXT_color_buffer_half_float');
+  if (extF || extH) half = true; else scaleW = 1 / 8;         // RGBA8: ділимо ваги, щоб сума не переповнилась
+  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(o), s); throw new Error('shader'); } return o; };
+  const prog = (v, f) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p; };
+  const blobV = `#version 300 es
+  precision highp float;
+  layout(location=0) in vec2 aQ;
+  layout(location=1) in vec4 aI;      // x y R(вплив) pad
+  layout(location=2) in vec4 aC;      // r g b w
+  uniform vec2 uRes; uniform float uS;
+  out vec2 vQ; out vec4 vC;
+  void main(){ vQ=aQ; vC=aC; vec2 p=(aI.xy+aQ*aI.z)*uS; vec2 c=p/uRes*2.0-1.0; gl_Position=vec4(c.x,-c.y,0.0,1.0); }`;
+  const blobF = `#version 300 es
+  precision highp float;
+  in vec2 vQ; in vec4 vC; uniform float uW; out vec4 o;
+  void main(){ float d2=dot(vQ,vQ); if(d2>1.0) discard; float f=1.0-d2; f=f*f*vC.w*uW; o=vec4(vC.rgb*f,f); }`;
+  const compV = `#version 300 es
+  precision highp float; layout(location=0) in vec2 aQ; out vec2 vUV; void main(){ vUV=aQ*0.5+0.5; gl_Position=vec4(aQ,0.0,1.0); }`;
+  const compF = `#version 300 es
+  precision highp float;
+  in vec2 vUV; out vec4 o;
+  uniform sampler2D uFg, uBg; uniform float uInvW, uT, uTB, uTime, uGrain, uBgA, uPA;
+  uniform vec3 uBgCol; uniform vec4 uCur; uniform vec4 uEnter; uniform vec3 uEnterCol; uniform vec2 uRes;
+  float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+  void main(){
+    vec2 px=vUV*uRes;
+    vec4 bg=texture(uBg,vUV)*uInvW; vec4 fg=texture(uFg,vUV)*uInvW;
+    vec3 col=vec3(0.0); float a=0.0;
+    // тло: думка, в яку зайшли, оточує рівень зсередини
+    float de=distance(px,uEnter.xy); float ea=uEnter.w*smoothstep(uEnter.z,uEnter.z*0.35,de); col+=uEnterCol*ea; a+=ea;
+    // батьківський рівень у глибині
+    float eb=smoothstep(uTB-0.12,uTB+0.12,bg.a)*uBgA*uPA; col=mix(col,uBgCol,eb); a=max(a,eb);
+    // поточний рівень: гель
+    float e=smoothstep(uT-0.035,uT+0.035,fg.a);
+    vec3 fc=fg.rgb/max(fg.a,1e-4);
+    col=mix(col,fc,e); a=max(a,e);
+    // свічення курсора по краплях навколо нього
+    float dc=distance(px,uCur.xy); float g=uCur.w*smoothstep(uCur.z,uCur.z*0.1,dc);
+    col+=vec3(0.39,1.0,0.07)*g*e*0.9; a=max(a,g*e*0.9);
+    // зерно
+    float n=hash(px+fract(uTime*0.37)*13.0)-0.5; col+=n*uGrain*a;
+    o=vec4(col*a,a);
+  }`;
+  const pBlob = prog(blobV, blobF), pComp = prog(compV, compF);
+  const U = (p, n) => gl.getUniformLocation(p, n);
+  const ub = { res: U(pBlob, 'uRes'), s: U(pBlob, 'uS'), w: U(pBlob, 'uW') };
+  const uc = {}; ['uFg', 'uBg', 'uInvW', 'uT', 'uTB', 'uTime', 'uGrain', 'uBgA', 'uPA', 'uBgCol', 'uCur', 'uEnter', 'uEnterCol', 'uRes'].forEach(k => uc[k] = U(pComp, k));
+  // квадрат
+  const quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, quad); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const inst = gl.createBuffer(); let instCap = 0; let instData = new Float32Array(8 * 256);
+  const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, inst); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 32, 0); gl.vertexAttribDivisor(1, 1);
+  gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 32, 16); gl.vertexAttribDivisor(2, 1);
+  gl.bindVertexArray(null);
+  const vaoQ = gl.createVertexArray(); gl.bindVertexArray(vaoQ); gl.bindBuffer(gl.ARRAY_BUFFER, quad); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0); gl.bindVertexArray(null);
+  // FBO
+  const mkTarget = () => { const tex = gl.createTexture(), fb = gl.createFramebuffer(); return { tex, fb, w: 0, h: 0 }; };
+  const fg = mkTarget(), bg = mkTarget(); let fw = 0, fh = 0, fs = .5;
+  function sizeTarget(t, w, h) {
+    gl.bindTexture(gl.TEXTURE_2D, t.tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    if (half) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.tex, 0);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE && half) { half = false; scaleW = 1 / 8; sizeTarget(t, w, h); }
+    t.w = w; t.h = h;
+  }
+  function resize(W, H, dpr) {
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    fs = (dpr > 1.5 ? .5 : .66); fw = Math.max(2, Math.round(cv.width * fs)); fh = Math.max(2, Math.round(cv.height * fs));
+    sizeTarget(fg, fw, fh); sizeTarget(bg, fw, fh); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  function fill(target, items) {
+    const n = items.length / 8;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target.fb); gl.viewport(0, 0, fw, fh); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    if (!n) return;
+    gl.useProgram(pBlob); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+    gl.uniform2f(ub.res, fw, fh); gl.uniform1f(ub.s, fs * S.dpr); gl.uniform1f(ub.w, scaleW);
+    gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, inst);
+    if (n > instCap) { instCap = n * 2; gl.bufferData(gl.ARRAY_BUFFER, instCap * 32, gl.DYNAMIC_DRAW); }
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, items, 0, n * 8);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n);
+    gl.bindVertexArray(null);
+  }
+  let buf = new Float32Array(8 * 512);
+  const ensureBuf = n => { if (buf.length < n * 8) buf = new Float32Array(n * 16); };
+  // items у екранних px (CSS)
+  function paint(t, p) {
+    const view = M.leaves(), s = scaleNow();
+    // поточний рівень
+    ensureBuf(view.length + 2); let i = 0;
+    for (const n of view) {
+      const sp = w2s(n.x, n.y, p); const a = clamp(n.alpha === undefined ? 1 : n.alpha, 0, 1);
+      const dim = Math.min(.82, (1 - a) + (n.temp || 0) * .42);
+      const c = CATRGB[n.cat]; const r = n.r * s;
+      buf[i++] = sp.x; buf[i++] = sp.y; buf[i++] = r * K; buf[i++] = 0;
+      buf[i++] = (c[0] + (BG[0] - c[0]) * dim) / 255; buf[i++] = (c[1] + (BG[1] - c[1]) * dim) / 255; buf[i++] = (c[2] + (BG[2] - c[2]) * dim) / 255; buf[i++] = 1;
+    }
+    // курсор — теж крапля, зливається з сусідами
+    const c = S.cursor; let cur = [-999, -999, 0, 0];
+    if (c.active && S.trans > .9 && !S.editing && c.x > -500) {
+      const sp = w2s(c.x, c.y, p); const r = c.r * s; const gath = S.mode === 2 || S.gather;
+      if (gath) { buf[i++] = sp.x; buf[i++] = sp.y; buf[i++] = r * K; buf[i++] = 0; buf[i++] = .39; buf[i++] = 1; buf[i++] = .07; buf[i++] = .85; }
+      cur = [sp.x * S.dpr, sp.y * S.dpr, PH.mergeD * .8 * s * S.dpr, gath ? 1 : .45];
+    }
+    fill(fg, buf.subarray(0, i));
+    // батьківський рівень
+    const path = M.path; let j = 0; let enter = [-999, -999, 1, 0], ecol = [0, 0, 0];
+    if (path.length) {
+      const pn = M.level(path.length > 1 ? path[path.length - 2] : null).filter(n => !n.hidden && (n.kind !== 'z' || n.zc)); ensureBuf(pn.length);
+      for (const n of pn) { const sp = w2s(n.x, n.y, p); const r = n.r * 1.1 * s * p.pS; buf[j++] = sp.x; buf[j++] = sp.y; buf[j++] = r * KB; buf[j++] = 0; buf[j++] = .26; buf[j++] = .33; buf[j++] = .2; buf[j++] = 1; }
+      const en = M.byId(path[path.length - 1]); if (en) { const cc = CATRGB[en.cat]; ecol = [cc[0] / 255, cc[1] / 255, cc[2] / 255]; enter = [S.W / 2 * S.dpr, S.H / 2 * S.dpr, Math.min(S.W, S.H) * .5 * S.dpr, .16]; }
+    }
+    fill(bg, buf.subarray(0, j));
+    // композит
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, cv.width, cv.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(pComp); gl.disable(gl.BLEND);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fg.tex); gl.uniform1i(uc.uFg, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bg.tex); gl.uniform1i(uc.uBg, 1);
+    gl.uniform1f(uc.uInvW, 1 / scaleW); gl.uniform1f(uc.uT, T); gl.uniform1f(uc.uTB, TB); gl.uniform1f(uc.uTime, t * .001);
+    gl.uniform1f(uc.uGrain, prefs.grain === false ? 0 : .11); gl.uniform1f(uc.uBgA, .3); gl.uniform1f(uc.uPA, p.pA);
+    gl.uniform3f(uc.uBgCol, .26, .33, .2); gl.uniform4f(uc.uCur, cur[0], cur[1], cur[2], cur[3]);
+    gl.uniform4f(uc.uEnter, enter[0], enter[1], enter[2], enter[3]); gl.uniform3f(uc.uEnterCol, ecol[0], ecol[1], ecol[2]); gl.uniform2f(uc.uRes, cv.width, cv.height);
+    gl.bindVertexArray(vaoQ); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); gl.bindVertexArray(null);
+  }
+  return { resize, paint, gl };
+})();
+// запасний рендер без WebGL2: прості круги
+function paint2dFallback(ctx, p) {
+  const s = scaleNow();
+  for (const n of M.nodes) { const sp = w2s(n.x, n.y, p); const a = clamp(n.alpha === undefined ? 1 : n.alpha, 0, 1); ctx.fillStyle = towardBg(CATS[n.cat], Math.min(.82, (1 - a) + (n.temp || 0) * .42)); ctx.beginPath(); ctx.arc(sp.x, sp.y, n.r * s, 0, Math.PI * 2); ctx.fill(); }
+}
+
+
+// ═══ Canvas2D-оверлей: нитки, частинки, підписи, вибір, Air ═══
+const fxc = $('#fx'); const fx = fxc.getContext('2d');
+function resize() {
+  S.dpr = Math.min(2, devicePixelRatio || 1); S.W = fxc.clientWidth; S.H = fxc.clientHeight;
+  const mob = coarse || S.W < 760; if (mob !== mobile) { mobile = mob; UI.layout(); }
+  fxc.width = Math.round(S.W * S.dpr); fxc.height = Math.round(S.H * S.dpr);
+  if (GL) GL.resize(S.W, S.H, S.dpr); else { $('#gl').width = fxc.width; $('#gl').height = fxc.height; }
+}
+addEventListener('resize', resize);
+if (window.visualViewport) visualViewport.addEventListener('resize', () => UI.dockEditor());
+
+function drawLinks(p, t) {
+  const byId = {}; for (const n of M.leaves()) byId[n.id] = n;
+  const tSec = t * .001, s = scaleNow();
+  fx.save(); fx.globalCompositeOperation = 'lighter';
+  M.links.forEach(k => {
+    const ss = k.split('|'); const va = M.vis(ss[0]), vb = M.vis(ss[1]); const a = va && byId[va.id], b = vb && byId[vb.id]; if (!a || !b || a === b || a.dying || b.dying) return;
+    const A2 = w2s(a.x, a.y, p), B2 = w2s(b.x, b.y, p); const len = hyp(B2.x - A2.x, B2.y - A2.y);
+    if (len < (a.r + b.r) * PH.fuse * s) return;
+    const born = M.linkBorn.get(k) || -9, age = tSec - born; const meta = M.linkMeta.get(k) || { k: 0, from: '' }; const kind = meta.k || 0, tone = LINK_TONE[kind];
+    const src = meta.from === ss[1] ? B2 : A2, dst = meta.from === ss[1] ? A2 : B2;
+    const phase = (a.seed + b.seed) * 1.7, pulse = .5 + .5 * Math.sin(t * .0021 + phase);
+    const dim = Math.min(a.alpha, b.alpha);
+    fx.strokeStyle = kind === 2 ? 'rgba(217,154,154,' + (.1 + .12 * pulse) * dim + ')' : 'rgba(168,189,151,' + (.09 + .11 * pulse) * dim + ')';
+    fx.lineWidth = 1 + .5 * pulse; fx.beginPath(); fx.moveTo(A2.x, A2.y); fx.lineTo(B2.x, B2.y); fx.stroke();
+    const cnt = Math.max(8, Math.min(44, Math.round(len / 13)));
+    for (let q = 0; q < cnt; q++) {
+      if (kind === 3 && q % 3) continue; const back = kind === 2 && q % 2 === 1;
+      let ph = (tSec * (kind === 2 ? .13 : .1) + q / cnt) % 1; if (back) ph = 1 - ph;
+      const x = src.x + (dst.x - src.x) * ph, y = src.y + (dst.y - src.y) * ph;
+      const fade = Math.min(1, ph / .12) * Math.min(1, (1 - ph) / .12); let hot = 0;
+      if (age > 0 && age < 1.3) hot = Math.exp(-Math.pow((ph - age / 1.3) * 5, 2)) * (1 - age / 1.3);
+      const rr = ((kind === 3 ? 1.6 : 1.1) + .7 * pulse + hot * 3.2) * Math.min(1.4, s);
+      fx.fillStyle = 'rgba(' + tone + ',' + (((.2 + .26 * pulse) * fade + hot) * dim) + ')'; fx.beginPath(); fx.arc(x, y, rr, 0, Math.PI * 2); fx.fill();
+    }
+    if (kind === 1) { const ang = Math.atan2(dst.y - src.y, dst.x - src.x); fx.fillStyle = 'rgba(100,254,19,' + (.4 + .3 * pulse) * dim + ')'; for (const at of [.42, .78]) { const cx = src.x + (dst.x - src.x) * at, cy = src.y + (dst.y - src.y) * at; fx.beginPath(); fx.moveTo(cx + Math.cos(ang) * 6, cy + Math.sin(ang) * 6); fx.lineTo(cx + Math.cos(ang + 2.5) * 5, cy + Math.sin(ang + 2.5) * 5); fx.lineTo(cx + Math.cos(ang - 2.5) * 5, cy + Math.sin(ang - 2.5) * 5); fx.closePath(); fx.fill(); } }
+  });
+  fx.restore();
+}
+
+// ═══ Зони-клітини: диск, кільце, підпис зверху ═══
+function drawZones(p, t) {
+  const s = scaleNow(); S.zoneLabels.length = 0;
+  const zs = M.zones(true).slice().sort((a, b) => M.zoneDepth(a) - M.zoneDepth(b));
+  fx.font = '600 11px -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif'; fx.textBaseline = 'middle';
+  for (const z of zs) {
+    const sp = w2s(z.x, z.y, p); const R = z.zr * s; const c = CATRGB[z.cat]; const a = clamp(z.alpha, 0, 1);
+    const hot = S.zoneHot === z.id, sel = S.sel === z.id, leaving = S.leaveHot === z.id;
+    const g = fx.createRadialGradient(sp.x, sp.y, R * .2, sp.x, sp.y, R);
+    g.addColorStop(0, 'rgba(' + c.join(',') + ',' + (.05 * a) + ')'); g.addColorStop(1, 'rgba(' + c.join(',') + ',' + ((hot ? .22 : .12) * a) + ')');
+    fx.fillStyle = g; fx.beginPath(); fx.arc(sp.x, sp.y, R, 0, Math.PI * 2); fx.fill();
+    fx.strokeStyle = sel ? ACC : hot ? 'rgba(100,254,19,0.8)' : leaving ? 'rgba(217,154,154,0.8)' : 'rgba(' + c.join(',') + ',' + (.45 * a) + ')';
+    fx.lineWidth = sel || hot || leaving ? 2 : 1.2; fx.setLineDash(hot || leaving ? [] : [5, 6]); fx.lineDashOffset = -t * .01;
+    fx.beginPath(); fx.arc(sp.x, sp.y, R, 0, Math.PI * 2); fx.stroke(); fx.setLineDash([]); fx.lineDashOffset = 0;
+    // підпис — пігулка на верхньому краю
+    const cnt = M.members(z.id).length; const txt = (z.text || 'група').slice(0, 22) + ' · ' + cnt;
+    const w = fx.measureText(txt).width + 22, h = 22; const lx = sp.x - w / 2, ly = sp.y - R - 11;
+    fx.fillStyle = sel ? ACC : 'rgba(26,35,20,' + (.92 * a) + ')'; fx.strokeStyle = sel ? ACC : 'rgba(' + c.join(',') + ',' + (.6 * a) + ')'; fx.lineWidth = 1;
+    fx.beginPath(); fx.roundRect(lx, ly, w, h, 11); fx.fill(); fx.stroke();
+    fx.fillStyle = sel ? '#0f2b00' : 'rgba(223,238,212,' + a + ')'; fx.textAlign = 'center'; fx.fillText(txt, sp.x, ly + h / 2 + .5); fx.textAlign = 'left';
+    S.zoneLabels.push({ id: z.id, x: lx, y: ly, w, h });
+  }
+  fx.textBaseline = 'alphabetic';
+}
+
+// підписи з LOD: важливіші — завжди, решта — коли є місце або при зумі
+const placed = [];
+function drawLabels(p) {
+  if (!S.labels) return; placed.length = 0;
+  const s = scaleNow(); const g = M.g;
+  const N = M.leaves().filter(n => n.text);
+  const imp = n => (n.id === S.sel ? 1e6 : 0) + (n.id === S.hover ? 1e5 : 0) + (g.deg[n.id] || 0) * 10 + (g.kids[n.id] || 0) * 4 + n.r / 10;
+  N.sort((a, b) => imp(b) - imp(a));
+  const full = s >= 1.35; const maxCh = full ? 40 : mobile ? 16 : 22;
+  const fsz = clamp(11 * Math.sqrt(s), 10, 17);
+  fx.font = '500 ' + fsz + 'px ' + '-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif'; fx.textAlign = 'center'; fx.textBaseline = 'top';
+  for (const n of N) {
+    if (n.id === S.editing) continue;
+    const a = clamp(n.alpha, 0, 1); if (a < .2) continue;
+    const sp = w2s(n.x, n.y, p); const rr = n.r * s;
+    if (sp.x < -80 || sp.y < -40 || sp.x > S.W + 80 || sp.y > S.H + 40) continue;
+    let txt = n.text; if (txt.length > maxCh) txt = txt.slice(0, maxCh - 1) + '…';
+    const w = fx.measureText(txt).width + 10, h = fsz + 6; const x = sp.x - w / 2, y = sp.y + rr + 5;
+    const must = n.id === S.sel || n.id === S.hover || n.id === S.diveHint?.id;
+    let hit = false; if (!must) for (const r of placed) { if (x < r.x + r.w && x + w > r.x && y < r.y + r.h && y + h > r.y) { hit = true; break; } }
+    if (hit && !full) continue;
+    placed.push({ x, y, w, h });
+    const al = (must ? 1 : .55 + .45 * Math.min(1, (g.deg[n.id] || 0) / 3)) * a;
+    fx.fillStyle = 'rgba(13,18,9,' + (.55 * al) + ')'; fx.beginPath(); fx.roundRect(x, y - 1, w, h, 5); fx.fill();
+    fx.fillStyle = n.id === S.sel ? ACC : 'rgba(223,238,212,' + al + ')'; fx.fillText(txt, sp.x, y + 2);
+  }
+  fx.textBaseline = 'alphabetic'; fx.textAlign = 'left';
+}
+function drawOverlay(t, p) {
+  const s = scaleNow();
+  fx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0); fx.clearRect(0, 0, S.W, S.H);
+  if (!GL) paint2dFallback(fx, p);
+  fx.globalAlpha = .2 + .8 * p.e;
+  // орбітальні крапки піддумок
+  fx.save(); fx.globalCompositeOperation = 'lighter';
+  for (const n of M.leaves()) { const kids = M.kids(n.id); if (!kids) continue; const sp = w2s(n.x, n.y, p); const shown = Math.min(kids, 6); for (let q = 0; q < shown; q++) { const rr = (n.r + 15 + (q % 3) * 8) * s; const ang = (q / shown) * Math.PI * 2 + t * .0004 * (.6 + (q % 3) * .2); fx.fillStyle = 'rgba(168,189,151,0.5)'; fx.beginPath(); fx.arc(sp.x + Math.cos(ang) * rr, sp.y + Math.sin(ang) * rr * .45, 1.9, 0, Math.PI * 2); fx.fill(); } }
+  fx.restore();
+  drawZones(p, t);
+  drawLinks(p, t);
+  for (const r of S.ripples) { const sp = w2s(r.x, r.y, p); fx.strokeStyle = 'rgba(168,189,151,' + (.18 * (1 - r.t)) + ')'; fx.lineWidth = 1.2; fx.beginPath(); fx.arc(sp.x, sp.y, (r.r0 + r.t * 66) * s, 0, Math.PI * 2); fx.stroke(); }
+  // шлейф курсора
+  fx.save(); fx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < S.trail.length; i++) { const q = S.trail[i]; if (q.a < .03) continue; const sp = w2s(q.x, q.y, p); const rr = 6 + 14 * (i / S.trail.length); const gr = fx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, rr); gr.addColorStop(0, 'rgba(100,254,19,' + (.09 * q.a) + ')'); gr.addColorStop(1, 'rgba(100,254,19,0)'); fx.fillStyle = gr; fx.beginPath(); fx.arc(sp.x, sp.y, rr, 0, Math.PI * 2); fx.fill(); }
+  fx.restore();
+  // вибір / ціль нитки / ціль скидання
+  const selId = S.editing || S.sel; const hotId = S.thread ? S.linkHot : S.dropHot;
+  if (hotId && hotId !== selId) { const n = M.byId(hotId); if (n) { const sp = w2s(n.x, n.y, p); fx.fillStyle = S.dropPhase === 2 ? 'rgba(211,196,140,0.9)' : 'rgba(58,166,6,0.85)'; fx.beginPath(); fx.arc(sp.x, sp.y, n.r * s, 0, Math.PI * 2); fx.fill(); } }
+  if (selId) {
+    const n = M.byId(selId); if (n && !n.dying && !(n.kind === 'z' && !n.zc)) {
+      const sp = w2s(n.x, n.y, p); const rr = n.r * s;
+      fx.fillStyle = ACC; fx.beginPath(); fx.arc(sp.x, sp.y, rr, 0, Math.PI * 2); fx.fill();
+      if (!S.editing && !S.menu) { // кільце з ручкою: тягни — нитка
+        fx.strokeStyle = 'rgba(100,254,19,0.5)'; fx.lineWidth = 1; fx.setLineDash([3, 5]); fx.beginPath(); fx.arc(sp.x, sp.y, rr + 20, 0, Math.PI * 2); fx.stroke(); fx.setLineDash([]);
+        const ha = -Math.PI / 4; const hx = sp.x + Math.cos(ha) * (rr + 20), hy = sp.y + Math.sin(ha) * (rr + 20);
+        fx.fillStyle = '#0d1209'; fx.beginPath(); fx.arc(hx, hy, 9, 0, Math.PI * 2); fx.fill();
+        fx.strokeStyle = ACC; fx.lineWidth = 1.5; fx.beginPath(); fx.arc(hx, hy, 9, 0, Math.PI * 2); fx.stroke();
+        fx.beginPath(); fx.moveTo(hx - 3, hy + 3); fx.lineTo(hx + 3, hy - 3); fx.moveTo(hx + 3, hy - 3); fx.lineTo(hx, hy - 3); fx.moveTo(hx + 3, hy - 3); fx.lineTo(hx + 3, hy); fx.stroke();
+      }
+    }
+  }
+  // нитка, яку тягнемо
+  const th = S.thread || S.airThread;
+  if (th) { const from = M.byId(th.from); if (from) { const a = w2s(from.x, from.y, p); fx.strokeStyle = 'rgba(100,254,19,0.75)'; fx.lineWidth = 1.5; fx.setLineDash([5, 6]); fx.beginPath(); fx.moveTo(a.x, a.y); fx.lineTo(th.sx, th.sy); fx.stroke(); fx.setLineDash([]); if (!S.linkHot) { fx.fillStyle = 'rgba(100,254,19,0.35)'; fx.beginPath(); fx.arc(th.sx, th.sy, 10, 0, Math.PI * 2); fx.fill(); } } }
+  // горизонт подій
+  if (M.leaves().some(n => n.cat === 5 && !n.dying && !n.group)) { const hz = w2s(horizonAt().x, horizonAt().y, p); fx.strokeStyle = 'rgba(217,154,154,0.4)'; fx.lineWidth = 1; fx.setLineDash([3, 7]); fx.beginPath(); fx.arc(hz.x, hz.y, 46 * s, 0, Math.PI * 2); fx.stroke(); fx.setLineDash([]); fx.fillStyle = 'rgba(8,11,5,0.75)'; fx.beginPath(); fx.arc(hz.x, hz.y, 44 * s, 0, Math.PI * 2); fx.fill(); }
+  // слід входу в рівень
+  const since = S.enteredAt ? now() - S.enteredAt : 1e9;
+  if (M.path.length && since < 1900) { const e = since / 1900; fx.strokeStyle = 'rgba(100,254,19,' + (.5 * (1 - e)) + ')'; fx.lineWidth = 1.4; fx.beginPath(); fx.arc(S.W / 2, S.H / 2, 18 + e * 130, 0, Math.PI * 2); fx.stroke(); fx.beginPath(); fx.arc(S.W / 2, S.H / 2, 6 + e * 40, 0, Math.PI * 2); fx.stroke(); }
+  for (const n of M.leaves()) {
+    const sp = w2s(n.x, n.y, p);
+    if (n.kind === 'z') { // згорнута зона: бейдж із кількістю
+      const cnt = M.members(n.id).length; fx.strokeStyle = 'rgba(15,43,0,0.55)'; fx.lineWidth = 1.5; fx.setLineDash([4, 5]); fx.beginPath(); fx.arc(sp.x, sp.y, Math.max(6, n.r - 8) * s, 0, Math.PI * 2); fx.stroke(); fx.setLineDash([]);
+      fx.fillStyle = 'rgba(15,43,0,0.85)'; fx.font = '700 ' + Math.round(12 * Math.min(1.6, s)) + 'px ui-monospace,monospace'; fx.textAlign = 'center'; fx.textBaseline = 'middle'; fx.fillText(String(cnt), sp.x, sp.y); fx.textAlign = 'left'; fx.textBaseline = 'alphabetic';
+      continue;
+    }
+    const kids = M.kids(n.id); if (kids) { fx.fillStyle = 'rgba(15,43,0,0.55)'; const shown = Math.min(5, kids); for (let i = 0; i < shown; i++) { const a = -Math.PI / 2 + (i - (shown - 1) / 2) * .3; fx.beginPath(); fx.arc(sp.x + Math.cos(a) * (n.r - 9) * s, sp.y + Math.sin(a) * (n.r - 9) * s, 2.1, 0, Math.PI * 2); fx.fill(); } }
+  }
+  // мультивибір: кільця
+  if (S.multi.size) { for (const id of S.multi) { const n = M.byId(id); if (!n || n.dying) continue; const sp = w2s(n.x, n.y, p); const rr = (n.kind === 'z' && !n.zc ? n.zr : n.r) * s; fx.strokeStyle = ACC; fx.lineWidth = 2; fx.beginPath(); fx.arc(sp.x, sp.y, rr + 6, 0, Math.PI * 2); fx.stroke(); fx.fillStyle = ACC; fx.beginPath(); fx.arc(sp.x + rr * .7, sp.y - rr * .7, 8, 0, Math.PI * 2); fx.fill(); fx.strokeStyle = '#0f2b00'; fx.lineWidth = 2; fx.beginPath(); fx.moveTo(sp.x + rr * .7 - 3.5, sp.y - rr * .7); fx.lineTo(sp.x + rr * .7 - 1, sp.y - rr * .7 + 2.5); fx.lineTo(sp.x + rr * .7 + 3.5, sp.y - rr * .7 - 2.5); fx.stroke(); } }
+  // підказка семантичного зуму
+  if (S.diveHint && S.diveHint.kind === 'dive') { const n = M.byId(S.diveHint.id); if (n) { const sp = w2s(n.x, n.y, p); const pulse = .5 + .5 * Math.sin(t * .012); fx.strokeStyle = 'rgba(100,254,19,' + (.5 + .4 * pulse) + ')'; fx.lineWidth = 2; fx.beginPath(); fx.arc(sp.x, sp.y, (n.r + 10) * s + pulse * 6, 0, Math.PI * 2); fx.stroke(); } }
+  if (S.diveHint && S.diveHint.kind === 'up') { fx.strokeStyle = 'rgba(100,254,19,0.5)'; fx.lineWidth = 2; fx.setLineDash([8, 8]); fx.strokeRect(10, 10, S.W - 20, S.H - 20); fx.setLineDash([]); }
+  // край: під час перетягу показуємо зону видалення
+  if (S.drag && S.drag.edge) { const gr = fx.createLinearGradient(0, 0, 0, 0); fx.save(); fx.strokeStyle = 'rgba(217,154,154,' + (S.drag.edge * .9) + ')'; fx.lineWidth = 4 + S.drag.edge * 6; fx.strokeRect(0, 0, S.W, S.H); fx.restore(); }
+  drawLabels(p);
+  fx.globalAlpha = 1;
+  if (S.air === 2) drawAir(t);
+}
+
+// ═══ Головний цикл ═══
+function tick(t) {
+  const dt = Math.min(2.5, (t - S.lastT) / 16.7 || 1); S.lastT = t;
+  if (fxc.clientWidth !== S.W || fxc.clientHeight !== S.H) resize();
+  step(dt, t);
+  const p = proj();
+  if (GL) GL.paint(t, p);
+  drawOverlay(t, p);
+  UI.frame(p);
+  if (t - S.clusterT > 600) { S.clusterT = t; recluster(); }
+  S.raf = requestAnimationFrame(tick);
+}
+
+
+// ═══ Жести: один автомат для пальців і миші ═══
+const G = { long: 430, tap: 320, holdLink: 280, holdMerge: 1150, ptrs: new Map(), press: null, pinch: null, pressT: 0, lastTap: 0, lastTapId: null, menuDrag: false, space: false, ignore: false, maxPtrs: 0, pan: null, wheelT: 0 };
+MIND.G = G;
+const TAP = 300, DBL = 330, MOVE = 8;
+function sxy(e) { const r = fxc.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function edgeFactor(sx, sy) { const b = mobile ? bounds() : { l: 0, r: 0, t: 0, b: 0 }; const d = Math.min(sx - 0, sy - Math.max(0, b.t - 40), S.W - sx, S.H - Math.max(0, b.b - 90) - sy); return clamp(1 - d / 36, 0, 1); }
+function cancelPress() { clearTimeout(G.pressT); G.press = null; }
+// усі нащадки зони (для перетягу клітини цілком)
+function zoneTree(zid) { const out = []; const q = [zid]; while (q.length) { const cur = q.shift(); for (const n of M.all) if (n.group === cur) { out.push(n); if (n.kind === 'z') q.push(n.id); } } return out; }
+function startDrag(n, w) {
+  S.drag = { id: n.id, ox: w.x - n.x, oy: w.y - n.y, lx: w.x, ly: w.y, edge: 0, x0: n.x, y0: n.y, zone: n.kind === 'z' && !n.zc ? n.id : null };
+  if (S.drag.zone) S.drag.tree = zoneTree(n.id).map(m => ({ n: m, dx: m.x - n.x, dy: m.y - n.y }));
+}
+fxc.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) { if (e.button === 1) { G.pan = { sx: sxy(e).x, sy: sxy(e).y, px: S.view.px, py: S.view.py }; G.press = { x: 0, y: 0, sx: sxy(e).x, sy: sxy(e).y, t: now(), id: null, moved: true, mouse: true }; } return; }
+  if (S.editing && e.target === fxc) A.commitEdit();
+  try { fxc.setPointerCapture(e.pointerId); } catch (err) {}
+  const sp = sxy(e); G.ptrs.set(e.pointerId, { x: sp.x, y: sp.y, t: now() }); G.maxPtrs = Math.max(G.maxPtrs, G.ptrs.size);
+  if (G.ptrs.size === 2) {
+    cancelPress(); if (G.menuDrag) { G.menuDrag = false; UI.menuHover(null); }
+    if (S.drag) endDrag(null); S.thread = null; S.linkHot = null; G.pan = null;
+    const v = [...G.ptrs.values()]; const cx = (v[0].x + v[1].x) / 2, cy = (v[0].y + v[1].y) / 2;
+    G.pinch = { d0: Math.max(10, hyp(v[0].x - v[1].x, v[0].y - v[1].y)), cx, cy, z0: S.view.z, w0: s2w(cx, cy), moved: false, t0: now() };
+    S.viewAnim = null; return;
+  }
+  if (G.ptrs.size > 2 || G.ignore) { cancelPress(); return; }
+  if (prefs.sound) snd.ensure();
+  const w = s2w(sp.x, sp.y);
+  S.cursor.tx = w.x; S.cursor.ty = w.y; if (!S.cursor.active) { S.cursor.x = w.x; S.cursor.y = w.y; S.cursor.active = true; }
+  // спочатку — підпис зони, потім крапля
+  const z = pickZoneLabel(sp.x, sp.y); const n = z || pick(w.x, w.y);
+  if (S.menu && (!n || n.id !== S.menu)) { S.menu = null; UI.sync(); }
+  if (!n && onRing(w.x, w.y)) { S.thread = { from: S.sel, sx: sp.x, sy: sp.y }; S.linkHot = null; buzz(8); UI.hint(); return; }
+  G.press = { x: w.x, y: w.y, sx: sp.x, sy: sp.y, t: now(), id: n ? n.id : null, zone: !!z, moved: false, mouse: e.pointerType === 'mouse' };
+  if (n) {
+    n.touched = Date.now();
+    if (S.mode === 3) { /* режим вибору: лише тап */ }
+    else if (!z && (S.mode === 1 || e.altKey || e.shiftKey)) { S.sel = n.id; S.thread = { from: n.id, sx: sp.x, sy: sp.y }; UI.sync(); }
+    else startDrag(n, w);
+  } else G.pan = { sx: sp.x, sy: sp.y, px: S.view.px, py: S.view.py, pz: S.view.z };
+  clearTimeout(G.pressT);
+  G.pressT = setTimeout(() => {
+    const pr = G.press; if (!pr || pr.moved) return;
+    if (S.mode === 3) return;
+    if (pr.id) { S.drag = null; S.thread = null; S.sel = pr.id; S.menu = pr.id; G.menuDrag = true; buzz(18); snd.blip(460, .1, 'sine', .07); UI.sync(); }
+    else { G.pan = null; G.press = null; buzz(14); const nn = A.create({ x: pr.x, y: pr.y }, true); S.sel = nn.id; }
+  }, G.long);
+});
+fxc.addEventListener('pointermove', e => {
+  const sp = sxy(e);
+  if (G.ptrs.has(e.pointerId)) G.ptrs.set(e.pointerId, { x: sp.x, y: sp.y, t: now() });
+  if (G.pinch && G.ptrs.size >= 2) {
+    const v = [...G.ptrs.values()]; const d = hyp(v[0].x - v[1].x, v[0].y - v[1].y); const cx = (v[0].x + v[1].x) / 2, cy = (v[0].y + v[1].y) / 2;
+    const pz = G.pinch; if (!pz.moved && (Math.abs(d - pz.d0) > 6 || hyp(cx - pz.cx, cy - pz.cy) > 6)) pz.moved = true;
+    const z = clamp(pz.z0 * d / pz.d0, .45, 3.2); const p = proj();
+    const vx = S.W / 2 + (cx - p.cx) / p.s, vy = S.H / 2 + (cy - p.cy) / p.s;
+    S.view.z = z; S.view.px = vx - pz.w0.x * z; S.view.py = vy - pz.w0.y * z; pz.cx = cx; pz.cy = cy;
+    liveZoomHint(cx, cy); return;
+  }
+  if (G.ignore) return;
+  const w = s2w(sp.x, sp.y); S.cursor.tx = w.x; S.cursor.ty = w.y;
+  if (!S.cursor.active) { S.cursor.x = w.x; S.cursor.y = w.y; S.cursor.active = true; }
+  const pr = G.press;
+  if (pr && !pr.moved && hyp(sp.x - pr.sx, sp.y - pr.sy) > MOVE) { pr.moved = true; clearTimeout(G.pressT); if (S.drag) { const n = M.byId(S.drag.id); if (n) { const cx = n.x, cy = n.y; n.x = S.drag.x0; n.y = S.drag.y0; M.snapshot(); n.x = cx; n.y = cy; } } }
+  if (G.menuDrag) { UI.menuHover(sp); return; }
+  if (S.thread) { S.thread.sx = sp.x; S.thread.sy = sp.y; const t = pick(w.x, w.y); const id = t && t.id !== S.thread.from ? t.id : null; if (id !== S.linkHot) { S.linkHot = id; if (id) buzz(6); } return; }
+  if (S.drag) {
+    const d = S.drag; const n = M.byId(d.id); if (!n) return;
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; const last = evs[evs.length - 1] || e; const lp = sxy(last); const lw = s2w(lp.x, lp.y);
+    n.vx = (lw.x - d.lx) * .4; n.vy = (lw.y - d.ly) * .4; n.x = lw.x - d.ox; n.y = lw.y - d.oy; d.lx = lw.x; d.ly = lw.y;
+    if (d.tree) for (const m of d.tree) { m.n.x = n.x + m.dx; m.n.y = n.y + m.dy; m.n.home = { x: m.n.x, y: m.n.y }; m.n.vx = m.n.vy = 0; }
+    const ef = edgeFactor(lp.x, lp.y); if (ef > 0 && d.edge === 0) buzz(6); d.edge = ef;
+    // ціль: накласти на іншу краплю й потримати → зв'язок (фаза 1) → злиття (фаза 2)
+    let tgt = null;
+    if (!d.zone) for (const o of M.leaves()) { if (o.id === n.id || o.dying) continue; if (hyp(o.x - n.x, o.y - n.y) < o.r + 8) { tgt = o; break; } }
+    if (tgt) {
+      if (S.dropHot !== tgt.id) { S.dropHot = tgt.id; S.dropT = now(); S.dropPhase = 0; S.dropReady = false; }
+      else { const held = now() - S.dropT; const ph = held > G.holdMerge && tgt.kind !== 'z' && n.kind !== 'z' ? 2 : held > G.holdLink ? 1 : 0; if (ph !== S.dropPhase) { S.dropPhase = ph; S.dropReady = ph >= 1; buzz(ph === 2 ? [14, 40, 14] : [10, 30, 10]); UI.hint(); } }
+    } else { S.dropHot = null; S.dropReady = false; S.dropPhase = 0; }
+    // зона під краплею: чужа → увійти; своя, але вийшли за межу → вийти
+    const zAt = M.zoneAt(n.x, n.y, n.kind === 'z' ? n.id : null);
+    const zoneHot = !tgt && zAt && zAt.id !== n.group && !(n.kind === 'z' && M.isAncestorZone(n.id, zAt)) ? zAt.id : null;
+    const own = n.group ? M.byId(n.group) : null;
+    const leaveHot = !tgt && own && !own.zc && !zoneHot && hyp(n.x - own.x, n.y - own.y) > own.zr + 18 ? own.id : null;
+    if (zoneHot !== S.zoneHot) { S.zoneHot = zoneHot; if (zoneHot) buzz(8); UI.hint(); }
+    if (leaveHot !== S.leaveHot) { S.leaveHot = leaveHot; if (leaveHot) buzz(8); UI.hint(); }
+    if (pr && pr.moved && !d.hinted) { d.hinted = true; UI.hint(); }
+    return;
+  }
+  if (G.pan && pr && pr.moved) { const p = proj(); S.view.px = G.pan.px + (sp.x - G.pan.sx) / p.s; S.view.py = G.pan.py + (sp.y - G.pan.sy) / p.s; S.viewAnim = null; return; }
+  if (!S.editing) { const z = pickZoneLabel(sp.x, sp.y); const h = z || pick(w.x, w.y); const id = h ? h.id : null; if (id !== S.hover) { S.hover = id; UI.sync(); } }
+});
+function endDrag(sp) {
+  const d = S.drag; S.drag = null; if (!d) return; const n = M.byId(d.id); if (!n) return;
+  const edge = sp ? edgeFactor(sp.x, sp.y) : 0;
+  const reset = () => { S.dropHot = null; S.dropReady = false; S.dropPhase = 0; S.zoneHot = null; S.leaveHot = null; UI.hint(); };
+  if (edge >= .9) { A.remove(n.id); reset(); return; }
+  if (S.dropHot && S.dropPhase === 2) { A.merge([n.id, S.dropHot], S.dropHot); reset(); return; }
+  if (S.dropHot && S.dropReady) {
+    const t = M.byId(S.dropHot);
+    if (t) { const k = M.key(n.id, t.id); if (!M.links.has(k)) A.toggleLink(t.id, n.id); const a = Math.atan2(n.y - t.y, n.x - t.x) || (Math.random() * 6.28); const rr = t.r + n.r + 28; n.x = t.x + Math.cos(a) * rr; n.y = t.y + Math.sin(a) * rr; if ((t.group || null) !== (n.group || null)) { n.group = t.group || null; } }
+  } else if (S.zoneHot) { A.join(n.id, S.zoneHot); }
+  else if (S.leaveHot) { A.leave(n.id); }
+  n.home = { x: n.x, y: n.y }; n.vx = n.vy = 0; M.save(); reset();
+}
+fxc.addEventListener('pointerup', onUp); fxc.addEventListener('pointercancel', onUp);
+function onUp(e) {
+  clearTimeout(G.pressT); const sp = sxy(e); G.ptrs.delete(e.pointerId);
+  if (G.pinch) {
+    if (G.ptrs.size < 2) {
+      const pz = G.pinch; G.pinch = null; G.ignore = G.ptrs.size > 0;
+      if (!pz.moved && now() - pz.t0 < G.tap) { if (G.maxPtrs >= 3) A.redo(); else A.undo(); buzz(12); S.view.z = pz.z0; animateView(1, 0, 0, 200); S.diveHint = null; UI.hint(); }
+      else settleZoom(pz.cx, pz.cy);
+      if (!G.ptrs.size) G.maxPtrs = 0;
+    }
+    return;
+  }
+  if (G.ignore) { if (!G.ptrs.size) { G.ignore = false; G.maxPtrs = 0; } return; }
+  if (!G.ptrs.size) G.maxPtrs = 0;
+  const w = s2w(sp.x, sp.y); const pr = G.press; G.press = null; G.pan = null;
+  if (G.menuDrag) { G.menuDrag = false; const act = UI.menuHit(sp); if (act) { act(); return; } if (pr && pr.moved) { S.menu = null; UI.sync(); } return; }
+  if (S.thread) {
+    const from = S.thread.from; const t = pick(w.x, w.y); S.thread = null; S.linkHot = null;
+    if (t && t.id !== from) A.toggleLink(from, t.id);
+    else if (!t) { const src = M.byId(from); if (src && hyp(w.x - src.x, w.y - src.y) > src.r + 30) { const nn = A.create({ x: w.x, y: w.y, exact: true }, true, from); S.sel = nn.id; } }
+    UI.hint(); UI.sync(); return;
+  }
+  if (S.drag) { const moved = pr ? pr.moved : true; if (moved) { endDrag(sp); if (pr) return; } else S.drag = null; }
+  if (!pr || pr.moved) { if (pr && pr.moved && !pr.id && S.view.z < 1.02) animateView(1, 0, 0, 240); return; }
+  // ── тап ──
+  const t0 = now(); const dbl = t0 - G.lastTap < DBL && G.lastTapId === pr.id; G.lastTap = t0; G.lastTapId = pr.id;
+  if (!pr.id) {
+    const hit = pickLink(w.x, w.y); if (hit) { A.cycleLinkKind(hit); return; }
+    if (dbl) { G.lastTap = 0; const nn = A.create({ x: w.x, y: w.y }, true); S.sel = nn.id; return; }
+    if (S.mode === 3) return;
+    if (S.sel || S.menu || S.oneLink) { S.sel = null; S.menu = null; S.oneLink = null; UI.sync(); }
+    return;
+  }
+  const n = M.byId(pr.id);
+  if (S.mode === 3) { A.toggleMulti(pr.id); return; }
+  if (dbl) { G.lastTap = 0; if (n && n.kind === 'z') A.toggleZone(n.id); else A.deeper(pr.id); return; }
+  if (S.oneLink) { if (S.oneLink !== pr.id) A.toggleLink(S.oneLink, pr.id); S.oneLink = null; S.sel = pr.id; UI.sync(); return; }
+  if (S.mode === 1 && S.sel && S.sel !== pr.id) { A.toggleLink(S.sel, pr.id); S.sel = pr.id; UI.sync(); return; }
+  if (S.sel === pr.id && !S.menu && !pr.mouse) { S.menu = pr.id; buzz(10); UI.sync(); return; }
+  S.sel = pr.id; S.menu = null; S.hover = pr.id; snd.blip(520, .07, 'sine', .05); buzz(5); UI.sync();
+}
+fxc.addEventListener('pointerleave', () => { if (!G.ptrs.size) { S.cursor.active = false; if (S.hover) { S.hover = null; UI.sync(); } } });
+fxc.addEventListener('contextmenu', e => { e.preventDefault(); const sp = sxy(e); const w = s2w(sp.x, sp.y); const n = pickZoneLabel(sp.x, sp.y) || pick(w.x, w.y); if (n) { S.sel = n.id; S.menu = n.id; UI.sync(); } });
+fxc.addEventListener('dblclick', e => e.preventDefault());
+
+// колесо: зум довкола курсора; горизонталь — пан; після паузи вирішуємо семантику
+let hasGesture = 'ongesturestart' in window;
+fxc.addEventListener('wheel', e => {
+  e.preventDefault(); if (S.trans < .85) return;
+  const sp = sxy(e);
+  if (hasGesture && e.ctrlKey) return;
+  if (!e.ctrlKey && !e.metaKey && Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.2) { S.view.px -= e.deltaX; S.viewAnim = null; }
+  else { const f = Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0024)); zoomAt(f, sp.x, sp.y); S.viewAnim = null; liveZoomHint(sp.x, sp.y); }
+  clearTimeout(G.wheelT); G.wheelT = setTimeout(() => settleZoom(sp.x, sp.y), 200);
+}, { passive: false });
+if (hasGesture) {
+  let gs = 1, gp = null;
+  fxc.addEventListener('gesturestart', e => { e.preventDefault(); gs = e.scale; gp = sxy(e); S.viewAnim = null; });
+  fxc.addEventListener('gesturechange', e => { e.preventDefault(); const sp = sxy(e); zoomAt(e.scale / gs, sp.x, sp.y); gs = e.scale; gp = sp; liveZoomHint(sp.x, sp.y); });
+  fxc.addEventListener('gestureend', e => { e.preventDefault(); if (gp) settleZoom(gp.x, gp.y); });
+}
+
+// клавіатура
+addEventListener('keydown', e => {
+  if (e.key === 'Shift') S.gather = true;
+  if (e.key === ' ' && !S.editing) { G.space = true; fxc.classList.add('pan'); }
+  const t = e.target; if (S.editing || (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'))) return;
+  const k = e.key.toLowerCase(); const mod = e.metaKey || e.ctrlKey;
+  if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? A.redo() : A.undo(); return; }
+  if (mod && (k === 'y')) { e.preventDefault(); A.redo(); return; }
+  if (mod) return;
+  if (k === 'n') { e.preventDefault(); A.newThought(); }
+  else if (k === 'f') { e.preventDefault(); UI.toggleFocus(); }
+  else if (k === 'l') { S.labels = !S.labels; prefs.labels = S.labels; savePrefs(); UI.toast(S.labels ? 'Підписи увімк.' : 'Підписи вимк.'); }
+  else if (k === 't' && S.sel) A.cycleCat(S.sel);
+  else if (k === 'enter') { const n = M.byId(S.sel); if (n) A.startEdit(n); }
+  else if (k === 'tab') { e.preventDefault(); A.cycleSel(e.shiftKey ? -1 : 1); }
+  else if ((k === 'delete' || k === 'backspace') && S.sel) { e.preventDefault(); A.remove(S.sel); }
+  else if (k === 'escape') { if (S.mode === 3) A.selectMode(false); S.sel = null; S.menu = null; S.thread = null; if (UI.searchOpen()) UI.toggleSearch(); UI.sync(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); A.shallower(); }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); A.deeper(); }
+  else if (k === '/') { e.preventDefault(); UI.toggleSearch(true); }
+  else if (k === '?' || k === 'h') UI.onboarding(true);
+  else if (k === 'c' && S.sel) { const n = M.byId(S.sel); if (n && n.kind === 'z') A.toggleZone(n.id); else if (n && n.group) A.toggleZone(n.group); }
+  else if (k === 'g') { if (S.mode === 3 && S.multi.size) A.group([...S.multi]); else A.selectMode(S.mode !== 3, S.sel); }
+  else if (k === 'm' && S.mode === 3 && S.multi.size > 1) { const ids = [...S.multi]; A.merge(ids, S.sel && S.multi.has(S.sel) ? S.sel : ids[0]); }
+  else if (k === 'u' && S.sel) { const n = M.byId(S.sel); if (n && n.kind === 'z') A.ungroup(n.id); else if (n && n.group) A.leave(n.id); }
+});
+addEventListener('keyup', e => { if (e.key === 'Shift') S.gather = false; if (e.key === ' ') { G.space = false; fxc.classList.remove('pan'); } });
+
+// History API: «назад» у браузері = на рівень вище
+try { history.replaceState({ depth: 0 }, ''); } catch (e) {}
+addEventListener('popstate', e => { const d = (e.state && e.state.depth) || 0; if (d < M.path.length) { while (M.path.length > d) A.shallower(true); } else if (d > M.path.length) { try { history.go(M.path.length - d); } catch (err) {} } });
+
+// Струс телефону = впорядкувати
+const Shake = {
+  on: false, last: 0, hits: 0, ht: 0, px: 0,
+  handler(e) {
+    const a = e.accelerationIncludingGravity || e.acceleration; if (!a) return; const mag = hyp(a.x || 0, a.y || 0, a.z || 0); const t = now();
+    if (Math.abs(mag - Shake.px) > 13) { if (t - Shake.ht > 90) { Shake.hits++; Shake.ht = t; } if (Shake.hits >= 3 && t - Shake.last > 2500) { Shake.last = t; Shake.hits = 0; A.tidy(); buzz(24); } }
+    if (t - Shake.ht > 900) Shake.hits = 0; Shake.px = mag;
+  },
+  async enable() {
+    try { if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') { const r = await DeviceMotionEvent.requestPermission(); if (r !== 'granted') { UI.toast('Рух не дозволено'); return false; } } } catch (e) { UI.toast('Рух не дозволено'); return false; }
+    if (!Shake.on) { addEventListener('devicemotion', Shake.handler); Shake.on = true; } prefs.shake = true; savePrefs(); UI.toast('Струсни телефон — впорядкує'); return true;
+  },
+  disable() { removeEventListener('devicemotion', Shake.handler); Shake.on = false; prefs.shake = false; savePrefs(); }
+};
+
+
+// ═══ Голос (Web Speech) — спільний для редактора і Air ═══
+const Voice = {
+  r: null, text: '', interim: '', onText: null,
+  ok() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
+  start(cb) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return false; if (this.r) { this.onText = cb; return true; }
+    const r = new SR(); r.lang = 'uk-UA'; r.continuous = true; r.interimResults = true; this.text = ''; this.interim = ''; this.onText = cb;
+    r.onresult = e => { let fin = '', intm = ''; for (let i = e.resultIndex; i < e.results.length; i++) { const q = e.results[i]; if (q.isFinal) fin += q[0].transcript; else intm += q[0].transcript; } if (fin) this.text = (this.text + ' ' + fin).trim(); this.interim = intm; if (this.onText) this.onText((this.text + ' ' + intm).trim()); };
+    r.onend = () => { if (this.r === r) { try { r.start(); } catch (e) {} } };
+    r.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { this.stop(); UI.toast('Мікрофон не дозволено'); } };
+    try { r.start(); } catch (e) { return false; } this.r = r; return true;
+  },
+  stop() { const r = this.r; this.r = null; this.onText = null; if (r) { r.onend = null; try { r.stop(); } catch (e) {} } $('#bMic').classList.remove('live'); },
+  live() { return !!this.r; }
+};
+
+// ═══ UI ═══
+const UI = (() => {
+  const el = {
+    name: $('#top .name'), sub: $('#top .sub'), crumbs: $('#crumbs'), search: $('#search'), sInput: $('#search input'), ruler: $('#rulerItems'),
+    tip: $('#tip'), menu: $('#menu'), ring: $('#menu .ring'), editor: $('#editor'), ta: $('#editor textarea'), toast: $('#toast'), hint: $('#hint'),
+    empty: $('#empty'), sheet: $('#sheet'), labels: $('#labels'), strip: $('#airstrip'), chips: $('#airchips'), onb: $('#onb'),
+    bNew: $('#bNew'), bThread: $('#bThread'), bMagnet: $('#bMagnet'), bSelect: $('#bSelect'), selbar: $('#selbar'), row: $('#bottom .row'), selCount: $('#selCount'), bMerge: $('#bMerge'), bGroup: $('#bGroup'), bUp: $('#bUp'), bFocus: $('#bFocus'), bSound: $('#bSound'), bAir: $('#bAir'), bExpand: $('#bExpand'), bShake: $('#bShake'), bUndo: $('#bUndo'), bRedo: $('#bRedo')
+  };
+  let menuPage = 'main', menuItems = [], menuR = 104, hotPill = null, sheetOpen = false, docked = false, toastT = 0;
+  const ICON = {
+    text: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>', link: '<svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8 16c3-1 5-3 8-8"/></svg>',
+    split: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><circle cx="17" cy="12" r="3"/><path d="M12 12h2"/></svg>', dive: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>',
+    cat: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg>', fold: '<svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>',
+    unfold: '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>', del: '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+    back: '<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>', sel: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg>', out: '<svg viewBox="0 0 24 24"><circle cx="10" cy="12" r="7"/><path d="M14 12h7M18 9l3 3-3 3"/></svg>'
+  };
+  function layout() { document.body.classList.toggle('desk', !mobile); $('#bHelp').style.display = ''; }
+  function levelName(i) { return i === 0 ? 'Полотно' : ((M.byId(M.path[i - 1]) || {}).text || 'думка'); }
+  function sync() {
+    const cnt = M.live().length; const d = M.path.length;
+    el.name.textContent = levelName(d).slice(0, 40);
+    el.sub.textContent = cnt + ' ' + plural(cnt, ['думка', 'думки', 'думок']) + (d ? ' · рівень ' + d : '') + (S.focus ? ' · фокус' : '');
+    // крихти шляху
+    let h = ''; for (let i = 0; i <= d; i++) h += '<button class="crumb' + (i === d ? ' cur' : '') + '" data-i="' + i + '">' + (i ? '<span class="sep">›</span>' : '') + esc(levelName(i).slice(0, 16)) + '</button>';
+    if (el.crumbs.innerHTML !== h) el.crumbs.innerHTML = h;
+    el.crumbs.style.display = d ? '' : 'none';
+    let r = ''; for (let i = 0; i <= d; i++) r += '<button data-i="' + i + '" class="' + (i === d ? 'cur' : Math.abs(i - d) === 1 ? 'near' : '') + '"><span>' + esc(levelName(i).slice(0, 14)) + '</span><i></i></button>';
+    if (el.ruler.innerHTML !== r) el.ruler.innerHTML = r;
+    el.bUp.disabled = !d;
+    el.bNew.querySelector('span').textContent = S.sel ? ((M.byId(S.sel) || {}).kind === 'z' ? 'Нова в групі' : 'Поділ') : 'Нова думка';
+    el.bThread.classList.toggle('on', S.mode === 1); el.bMagnet.classList.toggle('on', S.mode === 2); el.bSelect.classList.toggle('on', S.mode === 3); el.bFocus.classList.toggle('on', S.focus);
+    const selOn = S.mode === 3; el.selbar.style.display = selOn ? '' : 'none'; el.row.style.display = selOn ? 'none' : '';
+    if (selOn) { const k = S.multi.size; el.selCount.textContent = k + ' ' + plural(k, ['вибрана', 'вибрані', 'вибрано']); el.bGroup.disabled = k < 1; el.bMerge.disabled = k < 2 || [...S.multi].some(i => (M.byId(i) || {}).kind === 'z'); $('#bLinkAll').disabled = k < 2; }
+    el.bSound.classList.toggle('on', snd.on); el.bAir.classList.toggle('on', S.air === 2); el.bAir.querySelector('span').textContent = S.air === 1 ? 'Air…' : S.air === 2 ? 'Air увімк.' : 'Air';
+    const hid = M.all.filter(n => n.kind === 'z' && n.zc && !n.dying).length; el.bExpand.style.display = hid ? '' : 'none'; el.bExpand.querySelector('span').textContent = 'Розгорнути ' + hid + ' ' + plural(hid, ['групу', 'групи', 'груп']);
+    el.bShake.style.display = (typeof DeviceMotionEvent !== 'undefined' && coarse) ? '' : 'none'; el.bShake.classList.toggle('on', Shake.on);
+    el.bUndo.disabled = !M.hist.length; el.bRedo.disabled = !M.redo.length;
+    el.empty.classList.toggle('on', cnt === 0 && !S.editing);
+    el.empty.querySelector('.t').textContent = d ? 'Порожня думка' : 'Ще немає думок';
+    el.empty.querySelector('.b').textContent = coarse ? 'Довгий тап по полю — нова думка. Кинь думку на думку — зв\'язок, потримай — злиття. «Вибір» → кілька думок → «Згрупувати».' : 'Подвійний клік по полю — нова думка. Колесо над думкою — углиб, назад — колесо вгору.';
+    // меню
+    if (S.menu) { if (el.menu.style.display === 'none' || el.menu.dataset.id !== S.menu) { buildMenu('main'); el.menu.dataset.id = S.menu; el.menu.style.display = ''; } }
+    else if (el.menu.style.display !== 'none') { el.menu.style.display = 'none'; el.menu.dataset.id = ''; hotPill = null; }
+    if (!S.editing && el.editor.style.display !== 'none') closeEditor();
+    hint();
+  }
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // ── контекстна підказка ──
+  function hint() {
+    let t;
+    const nm = id => '«' + nameOf(M.byId(id)) + '»';
+    if (S.drag && S.drag.hinted && S.dropPhase === 2) t = 'відпусти — <b>злити з ' + esc(nm(S.dropHot)) + '</b>';
+    else if (S.drag && S.drag.hinted && S.dropHot && S.dropReady) t = 'відпусти — <b>зв\'язок з ' + esc(nm(S.dropHot)) + '</b> · тримай далі — злити';
+    else if (S.drag && S.drag.hinted && S.zoneHot) t = 'відпусти — <b>у групу ' + esc(nm(S.zoneHot)) + '</b>';
+    else if (S.drag && S.drag.hinted && S.leaveHot) t = 'відпусти — <b>вийти з ' + esc(nm(S.leaveHot)) + '</b>';
+    else if (S.mode === 3) t = S.multi.size ? 'тапай ще · <b>Згрупувати</b> / <b>Злити</b> внизу' : 'тапай думки, які хочеш згрупувати або злити';
+    else if (S.thread || S.airThread) t = 'відпусти на думці — <b>зв\'язок</b> · у порожнечі — <b>нова зв\'язана думка</b>';
+    else if (S.drag && S.drag.hinted) t = S.drag.edge > .5 ? 'відпусти — <b>видалити</b>' : S.drag.zone ? 'переносиш усю групу · за край — видалити' : 'на думку й потримай — зв\'язок, довше — злиття · в коло групи — увійти · за край — видалити';
+    else if (S.diveHint) t = S.diveHint.kind === 'dive' ? 'відпусти — <b>углиб ' + esc(nm(S.diveHint.id)) + '</b>' : 'відпусти — <b>на рівень вище</b>';
+    else if (S.menu && G.menuDrag) t = 'тягни до пункту й відпусти';
+    else if (S.menu) t = 'тапни пункт · тап поза меню — закрити';
+    else if (S.editing) t = coarse ? 'готово — ✓ · мікрофон — диктуй' : 'Enter — зберегти · Shift+Enter — рядок · Esc — скасувати';
+    else if (S.oneLink) t = 'тапни другу думку — <b>нитка</b>';
+    else if (S.mode === 1) t = 'тап по двох думках — нитка · ще раз «Нитка» — вийти';
+    else if (S.mode === 2) t = 'магніт: думки тягнуться до пальця · ще раз «Магніт» — вийти';
+    else if (S.air === 2) t = S.airArmed ? 'щіпка — вибрати/нова · кулак — нести · долоня — меню · палець — нитка' : 'підніми руку в кадр — жести прокинуться';
+    else if (S.sel && (M.byId(S.sel) || {}).kind === 'z') t = coarse ? 'ще раз тап по підпису — меню · дабл-тап — згорнути · тягни підпис — перенести групу' : 'правий клік — меню · дабл-клік — згорнути · U — розпустити';
+    else if (S.sel) t = coarse ? 'ще раз тап — меню · дабл-тап — углиб · за ручку — нитка · тягни — перенести' : 'правий клік — меню · дабл-клік — углиб · Enter — текст · G — вибір кількох';
+    else t = coarse ? 'довгий тап по полю — нова · тап по думці — вибрати · два пальці — зум, розвести над думкою — углиб' : 'дабл-клік — нова · колесо над думкою — углиб · N нова · Tab вибір · ? жести';
+    if (el.hint.innerHTML !== t) el.hint.innerHTML = t;
+  }
+  // ── marking-меню ──
+  function buildMenu(page) {
+    menuPage = page; const n = M.byId(S.menu); if (!n) return;
+    let acts;
+    if (page === 'cats') acts = CATS.map((c, i) => ({ label: CAT_NAMES[i], color: c, run: () => { A.setCat(n.id, i); S.menu = null; sync(); } })).concat([{ label: '', icon: ICON.back, run: () => buildMenu('main') }]);
+    else if (n.kind === 'z') acts = [
+      { label: 'Назва', icon: ICON.text, run: () => A.startEdit(n) },
+      n.zc ? { label: 'Розгорнути', icon: ICON.unfold, run: () => A.toggleZone(n.id) } : { label: 'Згорнути', icon: ICON.fold, run: () => A.toggleZone(n.id) },
+      { label: 'Нова всередині', icon: ICON.split, run: () => { S.menu = null; const nn = A.create({ x: n.x + (Math.random() - .5) * 30, y: n.y + (Math.random() - .5) * 30 }, true, null, n.id); S.sel = nn.id; } },
+      { label: 'Тема', icon: ICON.cat, color: CATS[n.cat], run: () => buildMenu('cats'), keep: true },
+      { label: 'Вибрати ще', icon: ICON.sel, run: () => A.selectMode(true, n.id) },
+      { label: 'Розпустити', icon: ICON.unfold, run: () => A.ungroup(n.id) },
+      { label: 'Видалити', icon: ICON.del, danger: true, run: () => A.remove(n.id) }
+    ];
+    else acts = [
+      { label: 'Текст', icon: ICON.text, run: () => A.startEdit(n) },
+      { label: 'Нитка', icon: ICON.link, run: () => { S.oneLink = n.id; S.sel = n.id; S.menu = null; sync(); } },
+      { label: 'Поділ', icon: ICON.split, run: () => { S.menu = null; const nn = A.create({ x: n.x, y: n.y }, true, n.id); S.sel = nn.id; } },
+      { label: 'Углиб', icon: ICON.dive, run: () => A.deeper(n.id) },
+      { label: 'Тема', icon: ICON.cat, color: CATS[n.cat], run: () => buildMenu('cats'), keep: true },
+      { label: 'Вибрати ще', icon: ICON.sel, run: () => A.selectMode(true, n.id) },
+      ...(n.group ? [{ label: 'З групи', icon: ICON.out, run: () => A.leave(n.id) }] : []),
+      { label: 'Видалити', icon: ICON.del, danger: true, run: () => A.remove(n.id) }
+    ];
+    const R = Math.max(104, (n.kind === 'z' && !n.zc ? 20 : n.r * scaleNow()) + 72); menuR = R;
+    const widths = acts.map(a => ((a.label.length || 3) * 7.2) + (a.icon ? 22 : 0) + (a.color ? 18 : 0) + 30);
+    const steps = []; let spread = 0;
+    for (let i = 0; i < acts.length - 1; i++) { const d = (widths[i] / 2 + widths[i + 1] / 2 + 12) / R; steps.push(d); spread += d; }
+    let ang = -Math.PI / 2 - spread / 2;
+    menuItems = acts.map((a, i) => { if (i > 0) ang += steps[i - 1]; return { ...a, x: Math.cos(ang) * R, y: Math.sin(ang) * R }; });
+    el.ring.innerHTML = '<i class="core"></i>' + menuItems.map((m, i) => '<button class="pill' + (m.danger ? ' danger' : '') + '" data-i="' + i + '" style="left:' + Math.round(m.x) + 'px;top:' + Math.round(m.y) + 'px">' + (m.color ? '<i style="width:10px;height:10px;border-radius:50%;background:' + m.color + ';display:inline-block"></i>' : '') + (m.icon || '') + esc(m.label) + '</button>').join('');
+    el.menu.style.display = '';
+  }
+  el.menu.addEventListener('click', e => { const b = e.target.closest('.pill'); if (!b) return; e.stopPropagation(); const m = menuItems[+b.dataset.i]; if (!m) return; m.run(); buzz(10); if (!m.keep && S.menu && menuPage === 'main') { } });
+  el.menu.addEventListener('pointerdown', e => e.stopPropagation());
+  function menuAt() { /* позиція оновлюється щокадру у frame() */ }
+  function menuHover(sp) {
+    let best = null; if (sp) { const r0 = el.ring.getBoundingClientRect(); const host = fxc.getBoundingClientRect(); for (const b of el.ring.querySelectorAll('.pill')) { const r = b.getBoundingClientRect(); const cx = r.left - host.left + r.width / 2, cy = r.top - host.top + r.height / 2; if (hyp(cx - sp.x, cy - sp.y) < Math.max(34, r.width / 2 + 8)) { best = b; break; } } }
+    if (best !== hotPill) { if (hotPill) hotPill.classList.remove('hot'); hotPill = best; if (best) { best.classList.add('hot'); buzz(4); } }
+  }
+  function menuHit(sp) { menuHover(sp); const b = hotPill; if (!b) return null; const m = menuItems[+b.dataset.i]; hotPill = null; b.classList.remove('hot'); return m ? () => { m.run(); buzz(10); } : null; }
+  // ── редактор ──
+  function openEditor(n) {
+    el.editor.style.display = ''; el.ta.value = n.text || ''; el.ta.placeholder = n.kind === 'z' ? 'Назва групи…' : 'Сформулюй думку…'; grow(); el.editor.dataset.id = n.id; sync();
+    setTimeout(() => { el.ta.focus({ preventScroll: true }); try { el.ta.setSelectionRange(el.ta.value.length, el.ta.value.length); } catch (e) {} }, 30);
+    dockEditor();
+  }
+  function closeEditor() { Voice.stop(); el.editor.style.display = 'none'; el.editor.classList.remove('dock'); docked = false; try { el.ta.blur(); } catch (e) {} }
+  function editValue() { return el.ta.value; }
+  function grow() { el.ta.style.height = 'auto'; el.ta.style.height = Math.min(96, el.ta.scrollHeight) + 'px'; }
+  el.ta.addEventListener('input', grow);
+  el.ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); A.commitEdit(); } if (e.key === 'Escape') { e.preventDefault(); A.cancelEdit(); } });
+  $('#bOk').addEventListener('click', () => A.commitEdit());
+  $('#bMic').addEventListener('click', () => {
+    if (Voice.live()) { Voice.stop(); return; }
+    if (!Voice.ok()) { toast('Голос тут не працює — набери текст'); return; }
+    const base = el.ta.value.trim();
+    if (Voice.start(t => { el.ta.value = (base ? base + ' ' : '') + t; grow(); })) { $('#bMic').classList.add('live'); toast('Говори — думка наповнюється'); }
+  });
+  // на телефоні з клавіатурою редактор докуємо до низу видимої області
+  function dockEditor() {
+    if (el.editor.style.display === 'none') return;
+    const vv = window.visualViewport; const kb = vv ? (innerHeight - vv.height - vv.offsetTop) : 0;
+    const want = coarse && kb > 80;
+    if (want !== docked) { docked = want; el.editor.classList.toggle('dock', want); }
+    if (want) el.editor.style.bottom = Math.max(0, kb) + 'px';
+  }
+  // ── тост ──
+  function toast(msg, undoable) {
+    el.toast.innerHTML = '<div class="t"><span>' + esc(msg) + '</span>' + (undoable ? '<button>Повернути</button>' : '') + '</div>';
+    if (undoable) el.toast.querySelector('button').onclick = () => { A.undo(); el.toast.innerHTML = ''; };
+    clearTimeout(toastT); toastT = setTimeout(() => { el.toast.innerHTML = ''; }, undoable ? 3800 : 1900);
+  }
+  // ── позиції щокадру ──
+  function frame(p) {
+    const put = (node, id, dy) => { const n = M.byId(id); if (!n) return false; const sp = w2s(n.x, n.y, p); node.style.transform = 'translate(' + sp.x + 'px,' + (sp.y + dy(n) * scaleNow()) + 'px)'; return true; };
+    // тултип лише для миші
+    const hv0 = S.hover && !coarse && !S.editing && !S.menu && !S.drag ? M.byId(S.hover) : null; const hv = hv0 && hv0.kind === 'z' ? null : hv0;
+    if (hv) {
+      if (el.tip.style.display === 'none') el.tip.style.display = '';
+      const g = M.g; const bits = []; const dd = g.deg[hv.id] || 0, k = g.kids[hv.id] || 0;
+      if (dd) bits.push(dd + ' ' + plural(dd, ["зв'язок", "зв'язки", "зв'язків"])); if (k) bits.push(k + ' ' + plural(k, ['піддумка', 'піддумки', 'піддумок'])); if (hv.group) bits.push('у «' + nameOf(M.byId(hv.group)) + '»'); bits.push(CAT_NAMES[hv.cat]);
+      const t = hv.text || 'без назви'; if (el.tip.dataset.t !== t) { el.tip.querySelector('.t').textContent = t; el.tip.dataset.t = t; }
+      el.tip.querySelector('.m').textContent = bits.join(' · ');
+      put(el.tip, hv.id, n => -(n.r + 46));
+    } else if (el.tip.style.display !== 'none') el.tip.style.display = 'none';
+    if (S.menu && el.menu.style.display !== 'none') { const n = M.byId(S.menu); if (n) { let sp = w2s(n.x, n.y, p); if (n.kind === 'z' && !n.zc) sp = { x: sp.x, y: sp.y - n.zr * scaleNow() }; const bd = bounds(); const R = menuR + 52; const x = clamp(sp.x, Math.min(R, S.W / 2), Math.max(S.W - R, S.W / 2)), y = clamp(sp.y, bd.t + 60, S.H - bd.b + 40); el.menu.style.transform = 'translate(' + x + 'px,' + y + 'px)'; } }
+    if (S.editing && !docked) { const n = M.byId(S.editing); if (n) { let sp = w2s(n.x, n.y, p); if (n.kind === 'z' && !n.zc) sp = { x: sp.x, y: sp.y - n.zr * scaleNow() - 40 }; const bw = Math.min(300, S.W * .86) / 2 + 8; const bd = bounds(); el.editor.style.transform = 'translate(' + clamp(sp.x, bw, S.W - bw) + 'px,' + clamp(sp.y + (n.r + 16) * scaleNow(), bd.t, S.H - bd.b - 10) + 'px)'; } }
+    fxc.className = S.drag ? 'grabbing' : S.thread || S.mode === 1 ? 'cross' : G.space ? 'pan' : S.hover ? 'grab' : '';
+    if (S.air === 2) airFrame();
+  }
+  function clusters() {}
+  // ── share / download ──
+  async function share(blob, name, msg) {
+    const file = new File([blob], name, { type: blob.type });
+    if (coarse && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'MiND' }); toast(msg); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    const a = document.createElement('a'); a.download = name; a.href = URL.createObjectURL(blob); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); toast(msg);
+  }
+  // ── пошук / фокус ──
+  function toggleSearch(open) { const o = open === undefined ? !el.search.classList.contains('open') : open; el.search.classList.toggle('open', o); if (o) setTimeout(() => el.sInput.focus(), 30); else { el.sInput.value = ''; S.search = ''; } }
+  el.sInput.addEventListener('input', () => { S.search = el.sInput.value; });
+  el.sInput.addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); if (e.key === 'Escape') toggleSearch(false); else el.sInput.blur(); } });
+  function toggleFocus() { S.focus = !S.focus; if (S.focus && !S.sel) toast('Фокус: вибери думку — побачиш її кластер'); sync(); }
+  // ── онбординг ──
+  function onboarding(show) {
+    const rows = coarse ? [['тап', 'вибрати думку'], ['дабл-тап', 'углиб / нова на полі'], ['довгий тап', 'меню (тягни до пункту) / нова на полі'], ['тягни', 'перенести · на іншу — зв\'язок · за край — видалити'], ['ручка кільця', 'нитка до думки або в порожнечу'], ['два пальці', 'зум · розвести над думкою — углиб · звести — назад'], ['тап двома', 'крок назад'], ['кинути на думку', 'потримав — зв\'язок, ще довше — злиття'], ['кинути в коло', 'увійти в групу · витягнути — вийти'], ['Вибір → Згрупувати', 'клітина навколо вибраних'], ['тап по нитці', 'вид зв\'язку']]
+      : [['дабл-клік', 'углиб / нова на полі'], ['правий клік', 'меню'], ['тягни', 'перенести · на іншу — зв\'язок · за край — видалити'], ['Alt/Shift + тягни', 'нитка'], ['колесо', 'зум · над думкою далі — углиб · назад — вище'], ['N · Enter · T', 'нова · текст · тема'], ['Tab · Del · ⌘Z', 'вибір · видалити · назад'], ['↑ ↓ · F · L', 'рівні · фокус · підписи'], ['G · M · U · C', 'вибір/згрупувати · злити · розпустити · згорнути'], ['кинути на думку', 'потримав — зв\'язок, довше — злиття'], ['кинути в коло', 'увійти в групу · витягнути — вийти']];
+    $('#onbG').innerHTML = rows.map(r => '<b>' + esc(r[0]) + '</b><span>' + esc(r[1]) + '</span>').join('');
+    el.onb.classList.toggle('on', !!show);
+  }
+  $('#onbSkip').onclick = $('#onbGo').onclick = () => { onboarding(false); prefs.onb = false; savePrefs(); };
+  el.onb.addEventListener('click', e => { if (e.target === el.onb) { onboarding(false); prefs.onb = false; savePrefs(); } });
+  // ── кнопки ──
+  el.bNew.onclick = () => A.newThought();
+  el.bThread.onclick = () => { S.mode = S.mode === 1 ? 0 : 1; S.oneLink = null; S.thread = null; S.menu = null; sync(); };
+  el.bMagnet.onclick = () => { S.mode = S.mode === 2 ? 0 : 2; S.menu = null; sync(); };
+  el.bSelect.onclick = () => A.selectMode(S.mode !== 3, S.sel);
+  $('#bSelCancel').onclick = () => A.selectMode(false);
+  el.bGroup.onclick = () => { if (S.multi.size) A.group([...S.multi]); };
+  el.bMerge.onclick = () => { const ids = [...S.multi]; if (ids.length > 1) A.merge(ids, S.sel && S.multi.has(S.sel) ? S.sel : ids[0]); };
+  $('#bLinkAll').onclick = () => { const ids = [...S.multi]; if (ids.length < 2) return; M.snapshot(); for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) { const k = M.key(ids[i], ids[j]); if (!M.links.has(k)) { M.links.add(k); M.linkMeta.set(k, { k: 0, from: ids[i] }); M.linkBorn.set(k, now() / 1000); } } M.dirty(); M.save(); A.selectMode(false); toast('Зв\'язано ' + ids.length); };
+  el.bUp.onclick = () => A.shallower();
+  $('#bMore').onclick = () => { sheetOpen = !sheetOpen; el.sheet.classList.toggle('open', sheetOpen); $('#bMore').classList.toggle('on', sheetOpen); };
+  $('#bTidy').onclick = () => A.tidy(); el.bFocus.onclick = toggleFocus; el.bUndo.onclick = () => A.undo(); el.bRedo.onclick = () => A.redo();
+  el.bSound.onclick = () => { snd.on = !snd.on; prefs.sound = snd.on; savePrefs(); if (snd.on) { snd.ensure(); if (snd.ctx && snd.ctx.state === 'suspended') snd.ctx.resume(); snd.startAmbient(); } else snd.stopAmbient(); sync(); };
+  $('#bPng').onclick = () => A.exportPng(); $('#bMd').onclick = () => A.exportMd(); $('#bJsonOut').onclick = () => A.exportJson();
+  $('#bJsonIn').onclick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json'; i.onchange = () => { if (i.files[0]) A.importJson(i.files[0]); }; i.click(); };
+  el.bExpand.onclick = () => A.expandAll(); $('#bClear').onclick = () => A.clearAll();
+  el.bShake.onclick = async () => { if (Shake.on) { Shake.disable(); toast('Струс вимкнено'); } else await Shake.enable(); sync(); };
+  el.bAir.onclick = () => Air.toggle(); $('#bAirOff').onclick = () => Air.toggle(); $('#bFlip').onclick = () => Air.flip();
+  $('#bSearch').onclick = () => toggleSearch(); $('#bHelp').onclick = () => onboarding(true);
+  el.crumbs.addEventListener('click', e => { const b = e.target.closest('.crumb'); if (b) A.goDepth(+b.dataset.i); });
+  el.ruler.addEventListener('click', e => { const b = e.target.closest('button'); if (b) A.goDepth(+b.dataset.i); });
+  document.addEventListener('pointerdown', e => { if (sheetOpen && !e.target.closest('#sheet') && !e.target.closest('#bMore')) { sheetOpen = false; el.sheet.classList.remove('open'); $('#bMore').classList.remove('on'); } }, true);
+  // ── Air-смужка ──
+  function airStrip(text, wait) { el.strip.classList.toggle('on', !!text); el.strip.querySelector('span').textContent = text || ''; el.strip.querySelector('.dot').classList.toggle('wait', !!wait); el.chips.classList.toggle('on', S.air === 2); }
+  function airFrame() { }
+  return { layout, sync, hint, toast, frame, clusters, openEditor, closeEditor, editValue, dockEditor, menuAt, menuHover, menuHit, share, toggleSearch, searchOpen: () => el.search.classList.contains('open'), toggleFocus, onboarding, airStrip, el };
+})();
+
+
+// ═══ Air: руки в повітрі (MediaPipe GestureRecognizer) + голос ═══
+// Трімована версія myDASH-порту: без обличчя, пози, силуету й об'єктів.
+const Air = (() => {
+  const VER = '0.10.14', CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + VER, MODEL = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task';
+  const GESTURE_UA = { Closed_Fist: 'кулак — несу', Open_Palm: 'долоня — меню', Pointing_Up: 'палець — нитка', Thumb_Up: 'вгору — зберегти', Thumb_Down: 'вниз — скасувати', Victory: 'victory', ILoveYou: '—', None: '' };
+  const video = $('#cam');
+  const H = { hands: [], gestures: [], HCONN: null, videoSize: { w: 0, h: 0 }, mirror: true, facing: 'user', slots: [{ on: false, cnt: 0 }, { on: false, cnt: 0 }], fist: null, dwell: null, thumb: '', thumbT: 0, two: null, shake: { last: 0, dir: 0, hits: 0, t: 0 }, pose: '', armed: false, running: false, GR: null, tracks: null, stage: '', pending: false };
+  const ema = (o, v, k) => o + (v - o) * (k === undefined ? .3 : k);
+  let visP = null;
+  function loadVision() {
+    if (visP) return visP; if (window.__visionNS) return Promise.resolve(window.__visionNS);
+    visP = new Promise((res, rej) => {
+      const tag = document.createElement('script'); tag.type = 'module';
+      tag.textContent = "import * as mp from '" + CDN + "/vision_bundle.mjs'; window.__visionNS = mp; window.dispatchEvent(new Event('__visionReady'));";
+      let done = false; const to = setTimeout(() => { if (!done) { done = true; rej(new Error('no-models')); } }, 25000);
+      addEventListener('__visionReady', () => { if (done) return; done = true; clearTimeout(to); window.__visionNS ? res(window.__visionNS) : rej(new Error('no-models')); }, { once: true });
+      tag.onerror = () => { if (!done) { done = true; clearTimeout(to); rej(new Error('no-models')); } };
+      document.head.appendChild(tag);
+    });
+    visP.catch(() => { visP = null; }); return visP;
+  }
+  function human(e) {
+    const n = (e && e.name) || '', m = (e && e.message) || '';
+    if (m === 'no-camera-api') return (typeof isSecureContext !== 'undefined' && !isSecureContext) ? 'камера працює лише на https' : 'браузер не дає доступу до камери';
+    if (n === 'NotAllowedError' || n === 'SecurityError') return 'доступ до камери заборонено';
+    if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'камери не знайдено';
+    if (n === 'NotReadableError' || n === 'AbortError') return 'камеру зайняв інший застосунок';
+    if (m === 'no-models') return 'моделі не доїхали — перевір мережу';
+    return n || m || 'помилка';
+  }
+  function plausible(lm) { return hyp(lm[0].x - lm[9].x, lm[0].y - lm[9].y) >= .045; }
+  function cover() { const vw = H.videoSize.w || 640, vh = H.videoSize.h || 480; const s = Math.max(S.W / vw, S.H / vh), dw = vw * s, dh = vh * s; return { s, dw, dh, ox: (S.W - dw) / 2, oy: (S.H - dh) / 2 }; }
+  function toScreen(nx, ny) { const c = cover(); return { x: c.ox + nx * c.dw, y: c.oy + ny * c.dh }; }
+  const toWorld = e => { const sp = toScreen(e.x, e.y); const w = s2w(sp.x, sp.y); return { x: w.x, y: w.y, sx: sp.x, sy: sp.y }; };
+  const stage = s => { H.stage = s; if (S.air === 1) UI.airStrip(s, true); };
+  async function start() {
+    if (H.running) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no-camera-api');
+    stage('Прошу камеру…');
+    const cam = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 360 }, frameRate: { ideal: 30, max: 30 } } });
+    H.tracks = cam.getVideoTracks(); video.srcObject = cam; video.muted = true; video.playsInline = true; try { await video.play(); } catch (e) {}
+    stage('Тягну модель рук…');
+    const mp = await loadVision(); const { FilesetResolver, GestureRecognizer } = mp;
+    const fsv = await FilesetResolver.forVisionTasks(CDN + '/wasm'); H.HCONN = GestureRecognizer.HAND_CONNECTIONS;
+    let last = null;
+    for (const d of ['GPU', 'CPU']) { try { H.GR = await GestureRecognizer.createFromOptions(fsv, { baseOptions: { modelAssetPath: MODEL, delegate: d }, runningMode: 'VIDEO', numHands: 2, minHandDetectionConfidence: .6, minHandPresenceConfidence: .6, minTrackingConfidence: .5 }); break; } catch (e) { last = e; } }
+    if (!H.GR) throw last || new Error('no-models');
+    H.running = true; stage(''); loop();
+    try { if ('wakeLock' in navigator) H.wl = await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+  function stop() {
+    H.running = false; if (H.tracks) for (const t of H.tracks) { try { t.stop(); } catch (e) {} } H.tracks = null; H.hands = []; H.armed = false; H.fist = null; H.dwell = null; H.two = null;
+    H.slots.forEach(s => { s.on = false; s.cnt = 0; }); clearTimeout(H.watchdog); video.srcObject = null; if (H.wl) { try { H.wl.release(); } catch (e) {} H.wl = null; }
+  }
+  function loop() {
+    const step = () => {
+      if (!H.running) return;
+      if (video.readyState >= 2 && video.videoWidth) { H.videoSize = { w: video.videoWidth, h: video.videoHeight }; const t = now(); try { post(H.GR.recognizeForVideo(video, t), t); } catch (e) {} }
+      H.pending = true;
+      if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) { video.requestVideoFrameCallback(() => { H.pending = false; step(); }); clearTimeout(H.watchdog); H.watchdog = setTimeout(() => { if (H.pending && H.running) { H.pending = false; step(); } }, 400); }
+      else requestAnimationFrame(() => { H.pending = false; step(); });
+    };
+    step();
+  }
+  // ── Події жестів → дії на полотні ──
+  function post(res, t) {
+    const raw = (res && res.landmarks) || []; const hands = [], gests = [];
+    for (let i = 0; i < raw.length; i++) if (plausible(raw[i])) { hands.push(raw[i]); gests.push((res.gestures && res.gestures[i]) || []); }
+    H.hands = hands; H.gestures = gests;
+    const named = i => (gests[i] && gests[i][0] && gests[i][0].score > .6) ? gests[i][0].categoryName : '';
+    const mx = v => H.mirror ? 1 - v : v;
+    const armed = hands.length > 0;
+    if (armed !== H.armed) { H.armed = armed; S.airArmed = armed; UI.hint(); UI.airStrip(armed ? '' : 'Підніми руку в кадр — жести прокинуться'); }
+    if (!armed) { H.pose = ''; H.dwell = null; H.two = null; for (const s of H.slots) { s.on = false; s.cnt = 0; } if (H.fist) { onFistEnd(); H.fist = null; } if (S.airThread) S.airThread = null; return; }
+    const g0 = named(0); H.pose = g0;
+    const tip = hands[0][8]; const pt = { x: mx(tip.x), y: tip.y };
+    onPoint(pt, g0 === 'Pointing_Up');
+    if (g0 === 'Closed_Fist') { const c = hands[0][0]; const p = { x: mx((c.x + hands[0][9].x) / 2), y: (c.y + hands[0][9].y) / 2 }; if (!H.fist) { H.fist = p; onFistStart(p); } else { H.fist = p; onFistMove(p); } }
+    else if (H.fist) { onFistEnd(); H.fist = null; }
+    for (let i = 0; i < 2; i++) {
+      const s = H.slots[i], lm = hands[i];
+      if (!lm || named(i) === 'Closed_Fist') { s.on = false; s.cnt = 0; continue; }
+      const scale = hyp(lm[0].x - lm[9].x, lm[0].y - lm[9].y) || 1e-6; const r = hyp(lm[4].x - lm[8].x, lm[4].y - lm[8].y) / scale;
+      const want = s.on ? r < .5 : r < .38; const px = mx((lm[4].x + lm[8].x) / 2), py = (lm[4].y + lm[8].y) / 2;
+      if (want) { s.cnt++; if (s.cnt >= 2 && !s.on) { s.on = true; s.x = px; s.y = py; if (i === 0) onPinch({ x: px, y: py }); } else if (s.on) { s.x = px; s.y = py; } }
+      else { s.on = false; s.cnt = 0; }
+    }
+    if (g0 === 'Thumb_Up' || g0 === 'Thumb_Down') { if (H.thumb !== g0) { H.thumb = g0; H.thumbT = t; } else if (t - H.thumbT > 320 && t - (H.thumbFired || 0) > 1200) { H.thumbFired = t; g0 === 'Thumb_Up' ? onConfirm() : onCancel(); } } else H.thumb = '';
+    if (g0 === 'Open_Palm') {
+      const c = hands[0][9]; const p = { x: mx(c.x), y: c.y };
+      if (!H.dwell || hyp(p.x - H.dwell.x, p.y - H.dwell.y) > .14) H.dwell = { x: p.x, y: p.y, t, fired: false, p: 0 };
+      else { H.dwell.x = ema(H.dwell.x, p.x); H.dwell.y = ema(H.dwell.y, p.y); H.dwell.p = Math.min(1, (t - H.dwell.t) / 700); if (!H.dwell.fired && H.dwell.p >= 1) { H.dwell.fired = true; onPalm(H.dwell); } }
+    } else H.dwell = null;
+    if (hands.length >= 2) {
+      const p = i => ({ x: mx(hands[i][8].x), y: hands[i][8].y }); const a2 = p(0), b2 = p(1); const d = hyp(a2.x - b2.x, a2.y - b2.y); const mid = { x: (a2.x + b2.x) / 2, y: (a2.y + b2.y) / 2 };
+      if (!H.two) H.two = { d0: d, fired: 0 };
+      else if (t - H.two.fired > 950) { const ratio = d / (H.two.d0 || 1e-6); if (ratio > 1.5) { H.two.fired = t; H.two.d0 = d; const w = toWorld(mid); const n = pick(w.x, w.y) || nearestNode(w.x, w.y, 200); if (n) { buzz(18); A.deeper(n.id); } } else if (ratio < .64) { H.two.fired = t; H.two.d0 = d; if (M.path.length) { buzz(18); A.shallower(); } } }
+    } else H.two = null;
+    if (g0 === 'Closed_Fist') { const x = mx(hands[0][0].x), sh = H.shake; if (sh.px !== undefined) { const dx = x - sh.px; if (Math.abs(dx) > .02) { const dir = dx > 0 ? 1 : -1; if (dir !== sh.dir) { sh.dir = dir; sh.hits++; sh.t = t; } if (sh.hits >= 4 && t - sh.last > 2200) { sh.last = t; sh.hits = 0; A.tidy(); buzz(24); } } if (t - sh.t > 900) sh.hits = 0; } sh.px = x; } else { H.shake.px = undefined; H.shake.hits = 0; }
+  }
+  function onPoint(e, drawing) {
+    const w = toWorld(e); S.cursor.tx = w.x; S.cursor.ty = w.y; S.cursor.active = true;
+    if (!S.airGrab) { const h = pick(w.x, w.y); const id = h ? h.id : null; if (id !== S.hover) { S.hover = id; } }
+    if (drawing) { if (!S.airThread) { const n = pick(w.x, w.y); if (n) { S.airThread = { from: n.id, sx: w.sx, sy: w.sy }; buzz(10); UI.hint(); } } else { S.airThread.sx = w.sx; S.airThread.sy = w.sy; const t = pick(w.x, w.y); S.linkHot = t && t.id !== S.airThread.from ? t.id : null; } }
+    else if (S.airThread) { const t = pick(w.x, w.y); if (t && t.id !== S.airThread.from) A.toggleLink(S.airThread.from, t.id); S.airThread = null; S.linkHot = null; UI.hint(); }
+  }
+  function onPinch(e) {
+    const w = toWorld(e);
+    if (S.menu) { pickMenu(w); return; }
+    const n = pick(w.x, w.y);
+    if (n) { if (S.editing && S.editing !== n.id) A.commitEdit(); S.sel = n.id; n.touched = Date.now(); S.hover = n.id; buzz(14); snd.blip(520, .09, 'sine', .06); UI.sync(); UI.toast('Вибрано: ' + (n.text || 'без назви')); }
+    else { if (S.editing) A.commitEdit(); const nn = A.create({ x: w.x, y: w.y }, true); S.sel = nn.id; if (Voice.ok()) { $('#bMic').click(); } }
+  }
+  function pickMenu(w) { const sp = { x: w.sx, y: w.sy }; const act = UI.menuHit(sp); if (act) act(); else { S.menu = null; UI.sync(); } }
+  function onFistStart(e) { const w = toWorld(e); const n = pick(w.x, w.y) || (S.sel ? M.byId(S.sel) : null); if (!n) return; S.airGrab = n.id; S.sel = n.id; buzz(16); snd.blip(300, .1, 'triangle', .06); UI.sync(); }
+  function onFistMove(e) { if (!S.airGrab) return; const w = toWorld(e); const n = M.byId(S.airGrab); if (!n) return; n.vx = (w.x - n.x) * .35; n.vy = (w.y - n.y) * .35; n.x = w.x; n.y = w.y; }
+  function onFistEnd() {
+    if (!S.airGrab) return; const n = M.byId(S.airGrab); S.airGrab = null; if (!n) return; const b = bounds();
+    if (n.x < b.l - 4 || n.y < b.t - 4 || n.x > S.W - b.r + 4 || n.y > S.H - b.b + 4) { A.remove(n.id); UI.toast('Викинуто за край', true); return; }
+    const zAt = M.zoneAt(n.x, n.y, n.kind === 'z' ? n.id : null); if (zAt && zAt.id !== n.group) A.join(n.id, zAt.id); else if (n.group) { const own = M.byId(n.group); if (own && !own.zc && hyp(n.x - own.x, n.y - own.y) > own.zr + 18) A.leave(n.id); }
+    n.home = { x: n.x, y: n.y };
+    n.vx = n.vy = 0; snd.blip(220, .12, 'sine', .05); M.save();
+  }
+  function onConfirm() { if (S.editing) { A.commitEdit(); UI.toast('Збережено'); buzz(18); snd.blip(700, .12, 'sine', .08); } else if (S.menu) { S.menu = null; UI.sync(); } }
+  function onCancel() { if (S.editing) { A.cancelEdit(); UI.toast('Скасовано'); buzz([8, 24]); } else if (S.menu) { S.menu = null; UI.sync(); } }
+  function onPalm(d) { const w = toWorld(d); const n = pick(w.x, w.y) || nearestNode(w.x, w.y, 120); if (!n || S.menu === n.id) return; S.sel = n.id; S.menu = n.id; S.hover = null; buzz(20); snd.blip(460, .1, 'sine', .07); UI.sync(); }
+  // ── Керування ──
+  async function toggle() {
+    if (S.air === 1) return;
+    if (S.air === 2) { stop(); S.air = 0; S.airGrab = null; S.airThread = null; S.cursor.active = false; video.classList.remove('on'); UI.airStrip(''); UI.sync(); UI.toast('Air вимкнено'); return; }
+    S.air = 1; UI.sync(); UI.airStrip('Прошу камеру…', true);
+    try { await start(); S.air = 2; video.classList.add('on'); UI.airStrip('Підніми руку в кадр — жести прокинуться'); UI.sync(); UI.toast('Air: палець — курсор, щіпка — взяти'); }
+    catch (e) { stop(); S.air = 0; UI.airStrip(''); UI.sync(); UI.toast('Air не піднявся — ' + human(e)); console.error('[Air]', e); }
+  }
+  async function flip() {
+    const next = H.facing === 'user' ? 'environment' : 'user';
+    try { const st = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: next, width: { ideal: 480 }, height: { ideal: 360 } } }); if (H.tracks) for (const t of H.tracks) { try { t.stop(); } catch (e) {} } H.tracks = st.getVideoTracks(); video.srcObject = st; try { await video.play(); } catch (e) {} H.facing = next; H.mirror = next === 'user'; video.style.transform = H.mirror ? 'scaleX(-1)' : 'none'; UI.toast('Камеру перевернуто'); } catch (e) { UI.toast('Не вдалось перевернути'); }
+  }
+  // ── Оверлей рук у fx ──
+  function draw(t) {
+    const c = cover(); const X = p => c.ox + (H.mirror ? 1 - p.x : p.x) * c.dw, Y = p => c.oy + p.y * c.dh;
+    fx.save(); fx.lineCap = 'round'; fx.lineJoin = 'round';
+    if (H.dwell && H.dwell.p > .02) { const dx = c.ox + H.dwell.x * c.dw, dy = c.oy + H.dwell.y * c.dh; fx.strokeStyle = 'rgba(100,254,19,0.85)'; fx.lineWidth = 3; fx.beginPath(); fx.arc(dx, dy, 26, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * H.dwell.p); fx.stroke(); }
+    fx.strokeStyle = 'rgba(100,254,19,0.7)'; fx.lineWidth = 2; fx.beginPath();
+    for (const lm of H.hands) for (const cn of (H.HCONN || [])) { const a = lm[cn.start], b = lm[cn.end]; fx.moveTo(X(a), Y(a)); fx.lineTo(X(b), Y(b)); }
+    fx.stroke();
+    fx.fillStyle = 'rgba(223,238,212,0.9)'; fx.beginPath(); for (const lm of H.hands) for (const p of lm) { fx.moveTo(X(p) + 2.6, Y(p)); fx.arc(X(p), Y(p), 2.6, 0, Math.PI * 2); } fx.fill();
+    for (let i = 0; i < H.hands.length; i++) { const tip = H.hands[i][8], s = H.slots[i]; fx.fillStyle = s && s.on ? ACC : 'rgba(100,254,19,0.55)'; fx.beginPath(); fx.arc(X(tip), Y(tip), s && s.on ? 9 : 5, 0, Math.PI * 2); fx.fill(); }
+    const gname = GESTURE_UA[H.pose || ''] || '';
+    const next = S.editing ? 'великий палець вгору — зберегти, вниз — скасувати' : S.menu ? 'щіпка на пункті — вибрати' : S.airGrab ? 'розжми кулак — відпустити' : !H.armed ? 'підніми руку в кадр' : 'щіпка — вибрати · кулак — нести · долоня — меню';
+    fx.textAlign = 'center'; const top = (mobile ? 150 : 110);
+    if (gname) { fx.font = '600 13px system-ui,sans-serif'; fx.fillStyle = ACC; fx.fillText(gname, S.W / 2, top); }
+    fx.font = '11px ui-monospace,monospace'; fx.fillStyle = 'rgba(123,145,105,0.95)'; fx.fillText(next, S.W / 2, gname ? top + 18 : top);
+    fx.textAlign = 'left'; fx.restore();
+  }
+  return { toggle, flip, draw, H };
+})();
+function drawAir(t) { Air.draw(t); }
+
+// ═══ Старт ═══
+function boot() {
+  UI.layout(); resize();
+  M.load(S.W, S.H); fitToView();
+  snd.on = !!prefs.sound; if (snd.on) { /* AudioContext стартує після першого дотику */ const once = () => { snd.ensure(); if (snd.ctx && snd.ctx.state === 'suspended') snd.ctx.resume(); snd.startAmbient(); removeEventListener('pointerdown', once); }; addEventListener('pointerdown', once); }
+  if (prefs.shake && coarse && typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission !== 'function') Shake.enable();
+  UI.sync(); recluster();
+  S.raf = requestAnimationFrame(tick);
+  if (prefs.onb) setTimeout(() => UI.onboarding(true), 500);
+  // пульс: якщо цикл обірвався — піднімаємо
+  setInterval(() => { if (now() - S.lastT > 1500) { cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(tick); } }, 2000);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) M.save(); });
+}
+boot();
+
+})();
+</script>
+</body>
+</html>
